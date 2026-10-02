@@ -8,13 +8,21 @@ class MenuCategory(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    slug = db.Column(db.String(120))
     description = db.Column(db.Text)
     sort_order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
-    # legacy alias column if public admin used is_enabled
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     items = db.relationship("MenuItem", back_populates="category", lazy="dynamic")
+
+    @property
+    def is_enabled(self):
+        return bool(self.is_active)
+
+    @is_enabled.setter
+    def is_enabled(self, value):
+        self.is_active = bool(value)
 
 
 class MenuItem(db.Model):
@@ -30,6 +38,7 @@ class MenuItem(db.Model):
     image_url = db.Column(db.String(500))
     is_available = db.Column(db.Boolean, default=True)
     is_active = db.Column(db.Boolean, default=True)
+    is_orderable = db.Column(db.Boolean, default=True)
     show_on_website = db.Column(db.Boolean, default=True)
     show_on_qr = db.Column(db.Boolean, default=True)
     sort_order = db.Column(db.Integer, default=0)

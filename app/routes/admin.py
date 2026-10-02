@@ -439,7 +439,7 @@ def menu_category():
     name = request.form.get("name", "").strip()
     if name:
         slug = name.lower().replace(" ", "-")
-        db.session.add(MenuCategory(name=name, slug=slug, is_enabled=True))
+        db.session.add(MenuCategory(name=name, slug=slug, is_active=True))
         db.session.commit()
         flash("Category added.", "success")
     return redirect(url_for("admin.menu"))
@@ -460,6 +460,7 @@ def menu_item():
             show_on_website=bool(request.form.get("show_on_website")),
             show_on_qr=bool(request.form.get("show_on_qr")),
             is_available=bool(request.form.get("is_available", True)),
+            is_active=True,
             is_orderable=True,
         )
         img = _upload(request.files.get("image"), "menu")
