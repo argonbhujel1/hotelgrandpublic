@@ -12,17 +12,10 @@ class MenuCategory(db.Model):
     description = db.Column(db.Text)
     sort_order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
+    # legacy alias column if public admin used is_enabled
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     items = db.relationship("MenuItem", back_populates="category", lazy="dynamic")
-
-    @property
-    def is_enabled(self):
-        return bool(self.is_active)
-
-    @is_enabled.setter
-    def is_enabled(self, value):
-        self.is_active = bool(value)
 
 
 class MenuItem(db.Model):

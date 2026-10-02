@@ -1,11 +1,5 @@
-"""Production WSGI entry (Gunicorn, Vercel, Railway, etc.)."""
+"""Vercel / production WSGI entrypoint."""
 import os
-import sys
-
-# Ensure package import wins (directory app/) over any leftover app.py
-_ROOT = os.path.dirname(os.path.abspath(__file__))
-if _ROOT not in sys.path:
-    sys.path.insert(0, _ROOT)
 
 if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
     os.environ.setdefault("FLASK_ENV", "production")
@@ -14,16 +8,11 @@ if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
     except OSError:
         pass
 
-from app import create_app, db  # app package (folder)
+from app import create_app as _create_flask_app
 
-application = create_app()
-app = application  # Vercel / Flask look for `app`
+_flask = _create_flask_app()
+if not hasattr(_flask, "wsgi_app"):
+    raise RuntimeError("create_app() did not return Flask app, got %r" % (type(_flask),))
 
-with app.app_context():
-    try:
-        db.create_all()
-    except Exception as e:
-        try:
-            app.logger.warning("create_all note: %s", e)
-        except Exception:
-            pass
+app = _flask
+application = _flask

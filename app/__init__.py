@@ -138,7 +138,6 @@ def create_app(config_class=Config):
 
     with app.app_context():
         try:
-            # Ensure all models are registered before create_all
             import app.models  # noqa: F401
             db.create_all()
         except Exception:
@@ -161,45 +160,5 @@ def create_app(config_class=Config):
             ensure_booking_columns()
         except Exception:
             pass
-        try:
-            _ensure_public_schema()
-        except Exception:
-            pass
 
     return app
-
-
-def _ensure_public_schema():
-    """Patch shared DB columns used by public models."""
-    from sqlalchemy import text
-    patches = [
-        "ALTER TABLE menu_categories ADD COLUMN IF NOT EXISTS slug VARCHAR(120)",
-        "ALTER TABLE menu_categories ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE",
-        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_orderable BOOLEAN DEFAULT TRUE",
-        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)",
-        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS show_on_website BOOLEAN DEFAULT TRUE",
-        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS show_on_qr BOOLEAN DEFAULT TRUE",
-        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE",
-        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT TRUE",
-        "ALTER TABLE room_types ADD COLUMN IF NOT EXISTS slug VARCHAR(140)",
-        "ALTER TABLE room_types ADD COLUMN IF NOT EXISTS is_enabled BOOLEAN DEFAULT TRUE",
-        "ALTER TABLE room_types ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0",
-        "ALTER TABLE room_types ADD COLUMN IF NOT EXISTS base_price NUMERIC(10,2) DEFAULT 0",
-        "ALTER TABLE room_types ADD COLUMN IF NOT EXISTS capacity INTEGER DEFAULT 2",
-        "ALTER TABLE room_types ADD COLUMN IF NOT EXISTS amenities TEXT",
-        "ALTER TABLE room_types ADD COLUMN IF NOT EXISTS description TEXT",
-        "ALTER TABLE room_images ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)",
-        "ALTER TABLE room_images ADD COLUMN IF NOT EXISTS url VARCHAR(500)",
-        "ALTER TABLE room_images ADD COLUMN IF NOT EXISTS is_primary BOOLEAN DEFAULT FALSE",
-        "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)",
-        "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS show_on_website BOOLEAN DEFAULT TRUE",
-    ]
-    for sql in patches:
-        try:
-            db.session.execute(text(sql))
-            db.session.commit()
-        except Exception:
-            try:
-                db.session.rollback()
-            except Exception:
-                pass

@@ -274,7 +274,7 @@ def rooms():
             db.session.rollback()
         except Exception:
             pass
-        flash(f"Rooms table error: {e}. Schema will auto-create on next cold start.", "error")
+        flash(f"Rooms error: {e}", "error")
         types = []
     return render_template("admin/rooms.html", types=types)
 
@@ -444,7 +444,7 @@ def menu():
             db.session.rollback()
         except Exception:
             pass
-        flash(f"Menu table error: {e}. Try refreshing after deploy (schema auto-patches).", "error")
+        flash(f"Menu error: {e}", "error")
         cats = []
     return render_template("admin/menu.html", categories=cats)
 
@@ -476,7 +476,6 @@ def menu_item():
             show_on_website=bool(request.form.get("show_on_website")),
             show_on_qr=bool(request.form.get("show_on_qr")),
             is_available=bool(request.form.get("is_available", True)),
-            is_active=True,
             is_orderable=True,
         )
         img = _upload(request.files.get("image"), "menu")
