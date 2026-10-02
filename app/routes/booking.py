@@ -182,11 +182,13 @@ def available_rooms():
         check_in = datetime.strptime(data.get("check_in"), "%Y-%m-%d").date()
         check_out = datetime.strptime(data.get("check_out"), "%Y-%m-%d").date()
         rooms = get_available_rooms_for_type(room_type_id, check_in, check_out)
-        return jsonify({
-            "rooms": [
-                {"id": r.id, "room_number": r.room_number, "floor": r.floor or ""}
-                for r in rooms
-            ]
-        })
+        payload = []
+        for r in rooms:
+            payload.append({
+                "id": r.id,
+                "room_number": getattr(r, "room_number", None) or getattr(r, "number", "") or str(r.id),
+                "floor": getattr(r, "floor", None) or "",
+            })
+        return jsonify({"rooms": payload})
     except Exception as e:
         return jsonify({"error": str(e), "rooms": []}), 400

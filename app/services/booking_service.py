@@ -61,21 +61,42 @@ def create_booking(
     else:
         room = available[0]
 
+    from datetime import datetime, time
+    # HMS stores check_in/out as DateTime
+    ci_dt = check_in if isinstance(check_in, datetime) else datetime.combine(check_in, time(12, 0))
+    co_dt = check_out if isinstance(check_out, datetime) else datetime.combine(check_out, time(11, 0))
+    phone_val = guest_phone.strip()
+    email_val = (guest_email or "").strip() or None
+    # Fixed advance amount from payment settings if claimed
+    adv_amt = Decimal("0")
+    if advance_paid_claimed:
+        try:
+            from app.models.admin import PaymentSetting
+            row = PaymentSetting.query.filter_by(key="advance_amount_fixed").first()
+            if row and row.value:
+                adv_amt = Decimal(str(row.value))
+        except Exception:
+            adv_amt = Decimal("0")
+
     booking = Booking(
         booking_ref=generate_booking_ref(),
         guest_name=guest_name.strip(),
-        guest_phone=guest_phone.strip(),
-        guest_email=(guest_email or "").strip() or None,
+        phone=phone_val,
+        email=email_val,
+        guest_phone=phone_val,
+        guest_email=email_val,
         num_guests=num_guests,
         message=(message or "").strip() or None,
+        notes=(message or "").strip() or None,
         room_id=room.id,
         room_type_id=rt.id,
-        room_number=room.room_number,
-        check_in=check_in,
-        check_out=check_out,
+        room_number=getattr(room, "room_number", None) or room.number,
+        check_in=ci_dt,
+        check_out=co_dt,
         base_price_snapshot=Decimal(str(rt.base_price)),
         total_nights=pricing["total_nights"],
         total_amount=Decimal(str(pricing["total_amount"])),
+        advance_amount=adv_amt,
         nightly_rates=json.dumps(pricing["nights"]),
         status="pending",
         source="website",

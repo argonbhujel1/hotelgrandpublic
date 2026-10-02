@@ -223,7 +223,7 @@ def settings():
 def payment():
     if request.method == "POST":
         _set_pay("advance_required", "1" if request.form.get("advance_required") else "0")
-        _set_pay("advance_percent", request.form.get("advance_percent", "50").strip())
+        _set_pay("advance_percent", request.form.get("advance_percent", "").strip())
         _set_pay("advance_amount_fixed", request.form.get("advance_amount_fixed", "").strip())
         _set_pay("payment_instructions", request.form.get("payment_instructions", "").strip())
         _set_pay("esewa_id", request.form.get("esewa_id", "").strip())
@@ -241,8 +241,8 @@ def payment():
 
     return render_template("admin/payment.html", pay={
         "advance_required": _get_pay("advance_required", "1") == "1",
-        "advance_percent": _get_pay("advance_percent", "50"),
-        "advance_amount_fixed": _get_pay("advance_amount_fixed", ""),
+        "advance_percent": _get_pay("advance_percent", ""),
+        "advance_amount_fixed": _get_pay("advance_amount_fixed", "1000"),
         "payment_instructions": _get_pay("payment_instructions", "Please pay advance via QR or bank transfer and share the screenshot."),
         "esewa_id": _get_pay("esewa_id", ""),
         "khalti_id": _get_pay("khalti_id", ""),

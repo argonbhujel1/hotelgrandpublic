@@ -155,31 +155,71 @@ def compute_pricing(room_type_id, check_in, check_out):
     return calculate_stay(base, check_in, check_out)
 
 
+
 def get_available_rooms_for_type(room_type_id, check_in, check_out):
-    from sqlalchemy import or_
+    """Rooms for a RoomType that are free between check_in and check_out."""
+    from datetime import datetime, date, time
+    from app.models.room import Room, RoomType
+    from app.models.booking import Booking
 
     rt = None
     try:
         rt = RoomType.query.get(int(room_type_id)) if room_type_id is not None else None
     except (TypeError, ValueError):
         rt = None
+
     if rt:
-        rooms = Room.query.filter(Room.is_active == True, Room.room_type == rt.name).order_by(Room.number).all()
+        rooms = (
+            Room.query.filter(Room.is_active == True)
+            .filter(
+                (Room.room_type == rt.name)
+                | (Room.room_type == rt.slug)
+                | (Room.room_type.ilike(rt.name))
+            )
+            .order_by(Room.number)
+            .all()
+        )
+        # If none linked by name yet, create is not done here — return empty
     else:
         rooms = Room.query.filter_by(is_active=True).order_by(Room.number).all()
-    rooms = [r for r in rooms if (r.status or "available").lower() in ("available", "clean", "")]
+
+    rooms = [
+        r for r in rooms
+        if (getattr(r, "status", None) or "available").lower() in ("available", "clean", "")
+    ]
+
     if not check_in or not check_out:
         return rooms
+
+    # Normalize to date
+    def as_date(v):
+        if v is None:
+            return None
+        if isinstance(v, datetime):
+            return v.date()
+        if isinstance(v, date):
+            return v
+        return v
+
+    ci, co = as_date(check_in), as_date(check_out)
     busy_ids = set()
     try:
         overlaps = Booking.query.filter(
-            Booking.status.in_(["pending", "confirmed", "checked_in", "booked"]),
-            Booking.check_in < check_out,
-            Booking.check_out > check_in,
+            Booking.status.in_(["pending", "confirmed", "checked_in", "booked"])
         ).all()
         for b in overlaps:
-            if b.room_id:
+            b_ci = as_date(b.check_in)
+            b_co = as_date(b.check_out)
+            if not b_ci or not b_co:
+                continue
+            # overlap: b_ci < co and b_co > ci
+            if b_ci < co and b_co > ci and b.room_id:
                 busy_ids.add(b.room_id)
     except Exception:
-        pass
+        try:
+            from app import db
+            db.session.rollback()
+        except Exception:
+            pass
+
     return [r for r in rooms if r.id not in busy_ids]

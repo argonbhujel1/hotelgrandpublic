@@ -129,8 +129,8 @@ def get_payment_info():
             return d
     return {
         "advance_required": g("advance_required", "1") == "1",
-        "advance_percent": g("advance_percent", "50"),
-        "advance_amount_fixed": g("advance_amount_fixed", ""),
+        "advance_percent": g("advance_percent", ""),
+        "advance_amount_fixed": g("advance_amount_fixed", "1000"),
         "payment_instructions": g("payment_instructions", ""),
         "esewa_id": g("esewa_id", ""),
         "khalti_id": g("khalti_id", ""),
