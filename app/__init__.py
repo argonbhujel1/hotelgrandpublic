@@ -159,5 +159,30 @@ def create_app(config_class=Config):
             ensure_booking_columns()
         except Exception:
             pass
+        try:
+            _ensure_public_schema()
+        except Exception:
+            pass
 
     return app
+
+
+def _ensure_public_schema():
+    """Patch shared DB columns used by public models."""
+    from sqlalchemy import text
+    patches = [
+        "ALTER TABLE menu_categories ADD COLUMN IF NOT EXISTS slug VARCHAR(120)",
+        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_orderable BOOLEAN DEFAULT TRUE",
+        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)",
+        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS show_on_website BOOLEAN DEFAULT TRUE",
+        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS show_on_qr BOOLEAN DEFAULT TRUE",
+    ]
+    for sql in patches:
+        try:
+            db.session.execute(text(sql))
+            db.session.commit()
+        except Exception:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
