@@ -47,7 +47,7 @@ def create_booking(
 
     available = get_available_rooms_for_type(room_type_id, check_in, check_out)
     if not available:
-        raise ValueError("No rooms available for the selected dates")
+        raise ValueError("This room/class is already booked for those dates. Please explore next available dates or another room class.")
 
     pricing = compute_pricing(room_type_id, check_in, check_out)
     room = None
@@ -57,7 +57,7 @@ def create_booking(
                 room = r
                 break
         if not room:
-            raise ValueError("Selected room is not available for these dates")
+            raise ValueError("This room is already booked by someone else for those dates. Please explore the next available room or dates.")
     else:
         room = available[0]
 

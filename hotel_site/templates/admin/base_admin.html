@@ -27,6 +27,7 @@
     <nav>
       <a href="{{ url_for('admin.dashboard') }}" class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">Dashboard</a>
       <a href="{{ url_for('admin.settings') }}" class="{% if request.endpoint == 'admin.settings' %}active{% endif %}">Settings & Hero</a>
+      <a href="{{ url_for('admin.maintenance') }}" class="{% if request.endpoint == 'admin.maintenance' %}active{% endif %}">Maintenance</a>
       <a href="{{ url_for('admin.rooms') }}" class="{% if 'room' in (request.endpoint or '') %}active{% endif %}">Room Classes</a>
       <a href="{{ url_for('admin.bookings') }}" class="{% if request.endpoint == 'admin.bookings' %}active{% endif %}">Bookings</a>
       <a href="{{ url_for('admin.payment') }}" class="{% if request.endpoint == 'admin.payment' %}active{% endif %}">Payment & QR</a>

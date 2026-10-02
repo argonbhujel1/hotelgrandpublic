@@ -207,6 +207,8 @@ def available_rooms():
                 "room_number": getattr(r, "room_number", None) or getattr(r, "number", "") or str(r.id),
                 "floor": getattr(r, "floor", None) or "",
             })
+        if not payload:
+            return jsonify({"rooms": [], "message": "All rooms in this class are booked for these dates. Please explore next dates or another class."})
         return jsonify({"rooms": payload})
     except Exception as e:
         return jsonify({"error": str(e), "rooms": []}), 400

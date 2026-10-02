@@ -821,3 +821,29 @@ def events_admin():
             "image": gs("parking_image", ""),
         },
     )
+
+
+
+@admin_bp.route("/maintenance", methods=["GET", "POST"])
+@admin_required
+def maintenance():
+    if request.method == "POST":
+        enabled = request.form.get("maintenance_mode") in ("1", "on", "true", "True")
+        _set_setting("maintenance_mode", "1" if enabled else "0")
+        _set_setting("maintenance_message", (request.form.get("maintenance_message") or "").strip())
+        logo = _upload(request.files.get("logo_image"), "brand")
+        if logo:
+            _set_setting("logo_url", logo)
+        fav = _upload(request.files.get("favicon_image"), "favicon")
+        if fav:
+            _set_setting("favicon_url", fav)
+        flash("Maintenance settings saved.", "success")
+        return redirect(url_for("admin.maintenance"))
+    settings = {
+        "maintenance_mode": (HotelSetting.query.filter_by(key="maintenance_mode").first() or type("X", (), {"value": "0"})()).value == "1",
+        "maintenance_message": (HotelSetting.query.filter_by(key="maintenance_message").first() or type("X", (), {"value": ""})()).value
+            or "We are temporarily under maintenance. Please check back soon.",
+        "logo_url": (HotelSetting.query.filter_by(key="logo_url").first() or type("X", (), {"value": ""})()).value or "",
+        "favicon_url": (HotelSetting.query.filter_by(key="favicon_url").first() or type("X", (), {"value": ""})()).value or "",
+    }
+    return render_template("admin/maintenance.html", settings=settings)

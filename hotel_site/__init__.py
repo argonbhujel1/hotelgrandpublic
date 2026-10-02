@@ -185,6 +185,35 @@ def create_app(config_class=Config):
         except Exception:
             pass
 
+
+    @app.before_request
+    def maintenance_gate():
+        from flask import request, session, render_template_string
+        ep = request.endpoint or ""
+        if ep.startswith("static") or ep.startswith("admin"):
+            return
+        try:
+            from hotel_site.services.content_service import get_setting
+            if get_setting("maintenance_mode") == "1":
+                msg = get_setting("maintenance_message") or "We are under maintenance. Please check back soon."
+                logo = get_setting("logo_url") or ""
+                fav = get_setting("favicon_url") or logo or ""
+                return render_template_string(
+                    """<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+                    <title>Maintenance | Hotel Grand Garden Urlabari</title>
+                    {% if fav %}<link rel="icon" href="{{ fav }}">{% endif %}
+                    <style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+                    font-family:system-ui,sans-serif;background:linear-gradient(160deg,#0f172a,#1e293b);color:#f8fafc;text-align:center;padding:24px}
+                    img{max-height:80px;margin-bottom:20px;border-radius:12px;background:#fff;padding:8px}
+                    h1{font-size:1.75rem;margin:0 0 12px}p{opacity:.9;max-width:420px;line-height:1.5}</style></head>
+                    <body>{% if logo %}<div><img src="{{ logo }}" alt="Hotel Grand Garden"></div>{% endif %}
+                    <div><h1>Under Maintenance</h1><p>{{ msg }}</p>
+                    <p style="margin-top:28px;font-size:.85rem;opacity:.6">Hotel Grand Garden · Urlabari, Morang</p></div></body></html>""",
+                    msg=msg, logo=logo, fav=fav,
+                ), 503
+        except Exception:
+            pass
+
     return app
 
 

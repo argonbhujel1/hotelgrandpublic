@@ -71,8 +71,8 @@
       .then(function (data) {
         var rooms = data.rooms || [];
         if (!rooms.length) {
-          roomIdSelect.innerHTML = '<option value="">No rooms available</option>';
-          if (hint) hint.textContent = "Try different dates or another class.";
+          roomIdSelect.innerHTML = '<option value="">Already booked — explore next</option>';
+          if (hint) hint.textContent = data.message || "Already booked by someone else for these dates. Please explore next dates or another room.";
           return;
         }
         roomIdSelect.innerHTML = '<option value="">Select room number</option>';

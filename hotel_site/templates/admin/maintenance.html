@@ -1,0 +1,22 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Maintenance{% endblock %}
+{% block content %}
+<h1>Website Maintenance Mode</h1>
+<form method="post" enctype="multipart/form-data" class="admin-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="form-group">
+    <label><input type="checkbox" name="maintenance_mode" value="1" {% if settings.maintenance_mode %}checked{% endif %}> Enable maintenance mode</label>
+  </div>
+  <div class="form-group"><label>Message</label>
+    <textarea name="maintenance_message" rows="3">{{ settings.maintenance_message }}</textarea>
+  </div>
+  <div class="form-group"><label>Logo (shown on maintenance page)</label>
+    <input type="file" name="logo_image" accept="image/*">
+    {% if settings.logo_url %}<p><img src="{{ settings.logo_url }}" style="max-height:60px"></p>{% endif %}
+  </div>
+  <div class="form-group"><label>Favicon</label>
+    <input type="file" name="favicon_image" accept="image/*,.ico">
+  </div>
+  <button type="submit" class="btn-primary">Save</button>
+</form>
+{% endblock %}
