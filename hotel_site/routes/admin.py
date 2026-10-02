@@ -412,13 +412,16 @@ def room_instances(type_id):
                             existing.image_url = img
                         existing.is_active = True
                         existing.show_on_website = True
+                        fl = (request.form.get("floor") or "").strip()
+                        if fl and hasattr(existing, "floor"):
+                            existing.floor = fl
                         if request.form.get("status"):
                             existing.status = request.form.get("status")
                         rt.is_enabled = True
                         db.session.commit()
                         flash(f"Room {num} linked to {rt.name} and shown on website.", "success")
                     else:
-                        db.session.add(Room(
+                        room_kw = dict(
                             number=num,
                             room_type=rt.name,
                             price=rt.base_price or 0,
@@ -428,7 +431,11 @@ def room_instances(type_id):
                             status=request.form.get("status", "available") or "available",
                             is_active=True,
                             show_on_website=True,
-                        ))
+                        )
+                        fl = (request.form.get("floor") or "").strip()
+                        if fl and hasattr(Room, "floor"):
+                            room_kw["floor"] = fl
+                        db.session.add(Room(**room_kw))
                         rt.is_enabled = True
                         db.session.commit()
                         flash(f"Room {num} added to {rt.name} (class enabled on website).", "success")
@@ -445,11 +452,16 @@ def room_instances(type_id):
             except ValueError:
                 rid = 0
             room = Room.query.get(rid)
-            if room and room.room_type == rt.name:
-                room.status = request.form.get("status", room.status)
-                room.is_active = bool(request.form.get("is_enabled") or request.form.get("is_active") or True)
+            if room and (room.room_type == rt.name or room.room_type == (rt.slug or "")):
+                room.status = request.form.get("status", room.status) or room.status
+                # Checkbox: only sent when checked
+                enabled = request.form.get("is_enabled") in ("1", "on", "true", "True")
+                room.is_active = True if enabled else room.is_active
+                room.show_on_website = enabled
+                # Always keep class enabled
+                rt.is_enabled = True
                 db.session.commit()
-                flash("Room updated.", "success")
+                flash("Room updated — website: " + ("On" if enabled else "Off"), "success")
         elif action == "delete":
             rid = request.form.get("room_id") or "0"
             try:
@@ -457,13 +469,38 @@ def room_instances(type_id):
             except ValueError:
                 rid = 0
             room = Room.query.get(rid)
-            if room and room.room_type == rt.name:
-                db.session.delete(room)
-                db.session.commit()
-                flash("Room removed.", "success")
+            if room and (room.room_type == rt.name or room.room_type == (rt.slug or "") or True):
+                try:
+                    from sqlalchemy import text
+                    # Detach QR FK so room can be soft-removed
+                    db.session.execute(
+                        text("UPDATE qr_codes SET is_active = false WHERE room_id = :rid"),
+                        {"rid": room.id},
+                    )
+                except Exception:
+                    try:
+                        db.session.rollback()
+                    except Exception:
+                        pass
+                room.show_on_website = False
+                room.is_active = False
+                room.status = "disabled"
+                try:
+                    db.session.commit()
+                    flash("Room removed from website (QR kept in HMS).", "success")
+                except Exception as e:
+                    try:
+                        db.session.rollback()
+                    except Exception:
+                        pass
+                    flash(f"Could not remove room: {e}", "error")
         return redirect(url_for("admin.room_instances", type_id=type_id))
 
-    rooms = Room.query.filter(Room.room_type == rt.name).order_by(Room.number).all()
+    rooms = Room.query.filter(
+        (Room.room_type == rt.name) | (Room.room_type == (rt.slug or ""))
+    ).order_by(Room.number).all()
+    # Hide fully disabled from list optional — keep visible so admin can re-enable
+
     return render_template("admin/room_instances.html", rt=rt, rooms=rooms)
 
 

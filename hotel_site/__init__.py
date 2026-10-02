@@ -207,6 +207,7 @@ def _ensure_public_schema():
         "ALTER TABLE room_images ADD COLUMN IF NOT EXISTS is_primary BOOLEAN DEFAULT FALSE",
         "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)",
         "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS show_on_website BOOLEAN DEFAULT TRUE",
+        "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS floor VARCHAR(20)",
     ]
     for sql in patches:
         try:

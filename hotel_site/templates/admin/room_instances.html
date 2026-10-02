@@ -37,10 +37,10 @@
           <option value="{{ s }}" {% if room.status == s %}selected{% endif %}>{{ s }}</option>
           {% endfor %}
         </select>
-        <label class="check"><input type="checkbox" name="is_enabled" value="1" {% if room.is_enabled %}checked{% endif %} onchange="this.form.submit()"> On</label>
+        <label class="check"><input type="checkbox" name="is_enabled" value="1" {% if room.show_on_website %}checked{% endif %} onchange="this.form.submit()"> On</label>
       </form>
     </td>
-    <td>{{ 'Yes' if room.is_enabled else 'No' }}</td>
+    <td>{{ 'Yes' if room.show_on_website and room.is_active else 'No' }}</td>
     <td>
       <form method="post" onsubmit="return confirm('Remove room {{ room.room_number }}?')">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

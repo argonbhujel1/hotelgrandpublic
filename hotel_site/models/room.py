@@ -48,6 +48,7 @@ class Room(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     number = db.Column(db.String(20), unique=True)
+    floor = db.Column(db.String(20))
     room_type = db.Column(db.String(50))
     price = db.Column(db.Numeric(12, 2), default=0)
     description = db.Column(db.Text)
@@ -66,3 +67,9 @@ class Room(db.Model):
     @property
     def room_number(self):
         return self.number
+
+    @property
+    def is_enabled(self):
+        """Website-visible + active (public admin toggle)."""
+        return bool(getattr(self, "show_on_website", False)) and bool(getattr(self, "is_active", True))
+
