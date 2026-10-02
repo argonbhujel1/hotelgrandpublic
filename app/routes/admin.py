@@ -189,6 +189,13 @@ def settings():
                     shutil.copy2(src_path, os.path.join(fav_dir, "favicon" + ext))
             except Exception as e:
                 current_app.logger.warning("Favicon copy failed: %s", e)
+        sig = _upload(request.files.get("email_signature_image"), "brand")
+        if sig:
+            _set_setting("email_signature", sig)
+        # optional text signature fallback
+        sig_text = (request.form.get("email_signature_text") or "").strip()
+        if sig_text and not sig:
+            _set_setting("email_signature", sig_text)
         db.session.commit()
         flash("Settings saved.", "success")
         return redirect(url_for("admin.settings"))
@@ -211,6 +218,8 @@ def settings():
             "latitude": gs("latitude", str(current_app.config["HOTEL_LAT"])),
             "longitude": gs("longitude", str(current_app.config["HOTEL_LNG"])),
             "logo_url": gs("logo_url", ""),
+            "email_signature": gs("email_signature", ""),
+            "favicon_url": gs("favicon_url", ""),
         },
         hero=hero,
     )
@@ -291,17 +300,27 @@ def room_type_edit(type_id=None):
         # Class image — applies to all rooms of this class
         img = _upload(request.files.get("class_image"), "rooms")
         if img:
-            # Set as primary class image
-            existing = rt.images.filter_by(is_primary=True).first()
+            existing = None
+            try:
+                existing = rt.images.filter_by(is_primary=True).first()
+            except Exception:
+                existing = None
             if existing:
                 existing.image_url = img
+                if hasattr(existing, "url"):
+                    existing.url = img
             else:
                 db.session.add(RoomImage(
-                    room_type_id=rt.id, image_url=img,
-                    alt_text=rt.name, is_primary=True, sort_order=0
+                    room_type_id=rt.id, image_url=img, url=img,
+                    alt_text=rt.name, alt=rt.name, is_primary=True, sort_order=0
                 ))
+            # Cascade to all physical rooms of this class
+            for room in Room.query.filter(
+                (Room.room_type == rt.name) | (Room.room_type == rt.slug)
+            ).all():
+                room.image_url = img
         db.session.commit()
-        flash("Room class saved. Image applies to all rooms in this class.", "success")
+        flash("Room class saved. Photo applied to all rooms in this class.", "success")
         return redirect(url_for("admin.rooms"))
 
     return render_template("admin/room_type_form.html", rt=rt)
@@ -316,31 +335,47 @@ def room_instances(type_id):
         if action == "add":
             num = request.form.get("room_number", "").strip()
             if num:
+                # HMS-compatible Room row
                 db.session.add(Room(
-                    room_type_id=rt.id,
-                    room_number=num,
-                    floor=request.form.get("floor", "").strip() or None,
-                    status=request.form.get("status", "available"),
-                    is_enabled=True,
+                    number=num,
+                    room_type=rt.name,
+                    price=rt.base_price or 0,
+                    description=rt.description,
+                    amenities=rt.amenities,
+                    image_url=(rt.images.filter_by(is_primary=True).first().display_url
+                               if rt.images.count() else None),
+                    status=request.form.get("status", "available") or "available",
+                    is_active=True,
+                    show_on_website=True,
                 ))
                 db.session.commit()
                 flash(f"Room {num} added to {rt.name}.", "success")
         elif action == "update":
-            room = Room.query.get(int(request.form.get("room_id", 0)))
-            if room and room.room_type_id == rt.id:
+            rid = request.form.get("room_id") or "0"
+            try:
+                rid = int(rid)
+            except ValueError:
+                rid = 0
+            room = Room.query.get(rid)
+            if room and room.room_type == rt.name:
                 room.status = request.form.get("status", room.status)
-                room.is_enabled = bool(request.form.get("is_enabled"))
+                room.is_active = bool(request.form.get("is_enabled") or request.form.get("is_active") or True)
                 db.session.commit()
                 flash("Room updated.", "success")
         elif action == "delete":
-            room = Room.query.get(int(request.form.get("room_id", 0)))
-            if room and room.room_type_id == rt.id:
+            rid = request.form.get("room_id") or "0"
+            try:
+                rid = int(rid)
+            except ValueError:
+                rid = 0
+            room = Room.query.get(rid)
+            if room and room.room_type == rt.name:
                 db.session.delete(room)
                 db.session.commit()
                 flash("Room removed.", "success")
         return redirect(url_for("admin.room_instances", type_id=type_id))
 
-    rooms = Room.query.filter_by(room_type_id=rt.id).order_by(Room.room_number).all()
+    rooms = Room.query.filter(Room.room_type == rt.name).order_by(Room.number).all()
     return render_template("admin/room_instances.html", rt=rt, rooms=rooms)
 
 
@@ -348,7 +383,7 @@ def room_instances(type_id):
 @admin_required
 def room_type_delete(type_id):
     rt = RoomType.query.get_or_404(type_id)
-    Room.query.filter_by(room_type_id=rt.id).delete()
+    Room.query.filter(Room.room_type == rt.name).delete()
     RoomImage.query.filter_by(room_type_id=rt.id).delete()
     db.session.delete(rt)
     db.session.commit()
@@ -380,6 +415,11 @@ def booking_status(bid):
     if pay in ("unpaid", "partial", "paid"):
         b.payment_status = pay
     db.session.commit()
+    try:
+        from app.services.email_service import notify_booking_status
+        notify_booking_status(b, b.status or "")
+    except Exception:
+        pass
     flash("Booking updated.", "success")
     return redirect(url_for("admin.bookings"))
 

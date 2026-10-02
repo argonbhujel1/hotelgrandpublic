@@ -109,6 +109,11 @@ def create_booking(
     )
     db.session.add(booking)
     db.session.commit()
+    try:
+        from app.services.email_service import notify_booking_received
+        notify_booking_received(booking)
+    except Exception:
+        pass
     return booking
 
 

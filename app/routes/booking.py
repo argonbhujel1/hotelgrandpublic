@@ -14,6 +14,19 @@ from werkzeug.utils import secure_filename
 
 booking_bp = Blueprint("booking", __name__)
 
+
+def _safe_int(val, default=0):
+    try:
+        if val is None:
+            return default
+        s = str(val).strip()
+        if s == "":
+            return default
+        return int(float(s))
+    except (TypeError, ValueError):
+        return default
+
+
 ALLOWED_PROOF = {"png", "jpg", "jpeg", "webp", "gif", "pdf"}
 
 
@@ -83,16 +96,20 @@ def book():
             name = request.form.get("guest_name", "").strip()
             phone = request.form.get("guest_phone", "").strip()
             email = request.form.get("guest_email", "").strip()
-            room_type_id = int(request.form.get("room_type_id", 0))
+            room_type_id = _safe_int(request.form.get("room_type_id"), 0)
             check_in = datetime.strptime(request.form.get("check_in"), "%Y-%m-%d").date()
             check_out = datetime.strptime(request.form.get("check_out"), "%Y-%m-%d").date()
-            num_guests = int(request.form.get("num_guests", 1))
+            num_guests = _safe_int(request.form.get("num_guests"), 1) or 1
             message = request.form.get("message", "").strip()
-            room_id_raw = request.form.get("room_id", "").strip()
-            room_id = int(room_id_raw) if room_id_raw else None
+            room_id_raw = (request.form.get("room_id") or "").strip()
+            room_id = _safe_int(room_id_raw, 0) or None
             advance_txn = request.form.get("advance_txn_number", "").strip()
             advance_claimed = bool(request.form.get("advance_paid"))
             proof_url = _save_proof(request.files.get("payment_proof"))
+            if not room_type_id:
+                raise ValueError("Please select a room class.")
+            if not room_id:
+                raise ValueError("Please select an available room number.")
             ip = _client_ip()
             loc = _ip_location(ip)
 
@@ -118,6 +135,7 @@ def book():
                 client_ip=ip,
                 ip_location=loc,
             )
+            flash("Booking has been received. We will confirm shortly.", "success")
             return redirect(url_for("booking.confirmation", ref=booking.booking_ref))
         except ValueError as e:
             flash(str(e), "error")
@@ -157,7 +175,7 @@ def quote():
     """AJAX: server-side price quote for date range + room type."""
     try:
         data = request.get_json() or {}
-        room_type_id = int(data.get("room_type_id", 0))
+        room_type_id = _safe_int(data.get("room_type_id"), 0)
         check_in = datetime.strptime(data.get("check_in"), "%Y-%m-%d").date()
         check_out = datetime.strptime(data.get("check_out"), "%Y-%m-%d").date()
         rt = RoomType.query.get(room_type_id)
@@ -178,7 +196,7 @@ def available_rooms():
     from app.services.room_service import get_available_rooms_for_type
     try:
         data = request.get_json() or {}
-        room_type_id = int(data.get("room_type_id", 0))
+        room_type_id = _safe_int(data.get("room_type_id"), 0)
         check_in = datetime.strptime(data.get("check_in"), "%Y-%m-%d").date()
         check_out = datetime.strptime(data.get("check_out"), "%Y-%m-%d").date()
         rooms = get_available_rooms_for_type(room_type_id, check_in, check_out)
