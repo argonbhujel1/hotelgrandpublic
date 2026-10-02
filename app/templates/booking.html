@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Book a Room | Hotel Grand{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <h1>Book a Room</h1>
+    <p>Secure your stay at Hotel Grand</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container booking-layout">
+    <form class="booking-form" method="post" action="{{ url_for('booking.book') }}" id="booking-form" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <label for="room_type_id">Room class *</label>
+        <select id="room_type_id" name="room_type_id" required>
+          <option value="">Select room class</option>
+          {% for room in rooms %}
+          <option value="{{ room.id }}"
+            data-slug="{{ room.slug }}"
+            data-normal="{{ room.rates.normal }}"
+            data-weekend="{{ room.rates.weekend }}"
+            {% if selected_slug == room.slug %}selected{% endif %}>
+            {{ room.name }} — {{ room.rates.normal_formatted }}/night
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group" id="room-pick-group">
+        <label for="room_id">Available room number *</label>
+        <select id="room_id" name="room_id">
+          <option value="">Select dates first, then room</option>
+        </select>
+        <p class="muted small" id="room-pick-hint">Choose class and dates to load available rooms.</p>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="check_in">Check-in *</label>
+          <input type="date" id="check_in" name="check_in" required>
+        </div>
+        <div class="form-group">
+          <label for="check_out">Check-out *</label>
+          <input type="date" id="check_out" name="check_out" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="num_guests">Number of guests *</label>
+        <input type="number" id="num_guests" name="num_guests" min="1" max="20" value="2" required>
+      </div>
+      <div class="form-group">
+        <label for="guest_name">Full name *</label>
+        <input type="text" id="guest_name" name="guest_name" required maxlength="150" autocomplete="name">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="guest_phone">Phone *</label>
+          <input type="tel" id="guest_phone" name="guest_phone" required maxlength="30" autocomplete="tel">
+        </div>
+        <div class="form-group">
+          <label for="guest_email">Email</label>
+          <input type="email" id="guest_email" name="guest_email" maxlength="150" autocomplete="email">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="message">Special requests</label>
+        <textarea id="message" name="message" rows="3" maxlength="1000"></textarea>
+      </div>
+      
+    {% if payment and payment.advance_required %}
+    <div class="payment-box anim-card">
+      <h3>Advance payment required</h3>
+      <p class="muted">{{ payment.payment_instructions or "Please pay the advance using the QR code below, then enter your transaction number." }}</p>
+      {% if payment.advance_amount_fixed %}
+      <p><strong>Advance amount:</strong> Rs. {{ payment.advance_amount_fixed }}</p>
+      {% elif payment.advance_percent %}
+      <p><strong>Advance:</strong> {{ payment.advance_percent }}% of total booking amount</p>
+      {% endif %}
+      {% if payment.qr_image %}
+      <div class="qr-wrap">
+        <img src="{{ payment.qr_image }}" alt="Payment QR code" class="qr-img">
+        <p class="muted small">Scan to pay</p>
+      </div>
+      {% else %}
+      <p class="muted">QR will appear here once admin uploads it.</p>
+      {% endif %}
+      {% if payment.esewa_id %}<p>eSewa: <strong>{{ payment.esewa_id }}</strong></p>{% endif %}
+      {% if payment.khalti_id %}<p>Khalti: <strong>{{ payment.khalti_id }}</strong></p>{% endif %}
+      {% if payment.bank_name %}
+      <p>{{ payment.bank_name }} · A/C {{ payment.bank_account }} · {{ payment.bank_account_name }}</p>
+      {% endif %}
+      <div class="form-group" style="margin-top:1rem">
+        <label class="check required-check">
+          <input type="checkbox" name="advance_paid" value="1" required>
+          I have paid the advance amount *
+        </label>
+      </div>
+      <div class="form-group">
+        <label for="advance_txn_number">Transaction / reference number *</label>
+        <input type="text" id="advance_txn_number" name="advance_txn_number" required
+               minlength="3" maxlength="100" placeholder="e.g. eSewa/Khalti txn ID or bank ref"
+               autocomplete="off">
+        <p class="muted small">Required — enter the ID from your payment receipt.</p>
+      </div>
+      <div class="form-group">
+        <label for="payment_proof">Payment proof (screenshot / receipt)</label>
+        <input type="file" id="payment_proof" name="payment_proof" accept="image/*,.pdf">
+        <p class="muted small">Optional but recommended — upload eSewa/Khalti/bank receipt screenshot.</p>
+      </div>
+    </div>
+    {% endif %}
+
+      <button type="submit" class="btn btn-gold">Request Booking</button>
+      <p class="muted small">Prices are recalculated on the server. Weekend offer applies Sat & Sun only.</p>
+    </form>
+
+    <aside class="booking-summary" id="booking-summary">
+      <h2>Price Summary</h2>
+      <div id="quote-content">
+        <p class="muted">Select room and dates to see the total.</p>
+      </div>
+      <div class="policies-box">
+        <h3>Policies</h3>
+        <pre class="policies-text">{{ policies }}</pre>
+      </div>
+    </aside>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/booking.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,15 @@
+IMPORTANT FOR GITHUB / VERCEL:
+
+The repository ROOT must contain:
+  wsgi.py
+  app.py
+  vercel.json
+  pyproject.toml
+  requirements.txt
+  config.py
+  app/   (package folder)
+
+If you upload the zip, extract so these files are at the top level of the repo,
+NOT inside an extra nested folder like hotel-grand-public/hotel-grand-public/.
+
+Vercel Project Settings → Root Directory should be empty (or `.`) unless you intentionally nested.

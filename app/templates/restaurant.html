@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Restaurant & Bar | Hotel Grand{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <h1>Restaurant & Bar</h1>
+    <p>Family dining and a relaxed bar experience</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    {% if categories %}
+      {% for cat in categories %}
+      <div class="menu-category">
+        <h2>{{ cat.name }}</h2>
+        {% if cat.description %}<p class="cat-desc">{{ cat.description }}</p>{% endif %}
+        <div class="menu-grid">
+          {% for item in cat['items'] %}
+          <article class="menu-item">
+            {% if item.image_url %}
+            <div class="menu-item-img">
+              <img src="{{ item.image_url }}" alt="{{ item.name }}" loading="lazy">
+            </div>
+            {% endif %}
+            <div class="menu-item-body">
+              <div class="menu-item-header">
+                <h3>{{ item.name }}</h3>
+                <span class="menu-price">{{ item.price_formatted }}</span>
+              </div>
+              {% if item.description %}
+              <p>{{ item.description }}</p>
+              {% endif %}
+            </div>
+          </article>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty-state">Our menu is being updated. Please visit us or call 021-541955 for today’s specials.</p>
+    {% endif %}
+    <div class="section-cta" style="margin-top:2rem">
+      <p class="muted">In-room & table ordering is available via Grand Kitchen QR when you stay or dine with us.</p>
+    </div>
+  </div>
+</section>
+
+{# Occupied / booked rooms from shared HMS bookings #}
+{% if occupied_bookings %}
+<section style="max-width:960px;margin:2rem auto;padding:0 1rem">
+  <h2 style="font-size:1.25rem;margin-bottom:.75rem">Current Guests / Booked Rooms</h2>
+  <div style="display:grid;gap:.5rem">
+  {% for b in occupied_bookings %}
+    <div style="background:#fff;border:1px solid #eee;border-radius:10px;padding:.75rem 1rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+      <div>
+        <strong>{% if b.room %}Room {{ b.room.number }}{% else %}Room #{{ b.room_id }}{% endif %}</strong>
+        {% if b.room %} · {{ b.room.room_type }}{% endif %}
+        <div style="font-size:.85rem;color:#666">{{ b.guest_name or 'Guest' }} · {{ b.status }}</div>
+      </div>
+      <div style="font-size:.85rem;color:#666">{{ b.check_in }} → {{ b.check_out }}</div>
+    </div>
+  {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

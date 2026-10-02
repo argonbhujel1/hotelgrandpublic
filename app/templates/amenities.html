@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Amenities | Hotel Grand{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <h1>Amenities</h1>
+    <p>Comfort and convenience throughout your stay</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="amenity-grid amenity-grid-lg">
+      {% if amenities %}
+        {% for a in amenities %}
+        <div class="amenity-card">
+          <span class="amenity-icon" aria-hidden="true">✦</span>
+          <h3>{{ a.name }}</h3>
+          {% if a.description %}<p>{{ a.description }}</p>{% endif %}
+        </div>
+        {% endfor %}
+      {% else %}
+        {% set defaults = [
+          ('Free WiFi', 'High-speed internet throughout the property'),
+          ('Free Parking', 'Secure on-site parking for guests'),
+          ('Restaurant', 'Family restaurant with local and continental dishes'),
+          ('Bar', 'Relaxed bar for evenings'),
+          ('AC Rooms', 'Air-conditioned rooms for comfort'),
+          ('Room Service', 'In-room dining available'),
+          ('Seminar Hall', 'Up to 150 guests for meetings and events'),
+          ('Outdoor Events', 'Garden space for weddings and celebrations'),
+          ('24/7 Front Desk', 'Always here to help'),
+          ('Laundry', 'Laundry service on request'),
+          ('TV', 'Television in rooms'),
+          ('Attached Bathroom', 'Private bathrooms in all rooms')
+        ] %}
+        {% for name, desc in defaults %}
+        <div class="amenity-card">
+          <span class="amenity-icon" aria-hidden="true">✦</span>
+          <h3>{{ name }}</h3>
+          <p>{{ desc }}</p>
+        </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

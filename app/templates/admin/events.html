@@ -1,0 +1,69 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Events & Parking{% endblock %}
+{% block content %}
+<h1>Seminar, Outdoor & Parking</h1>
+<p class="muted">Upload photos and edit capacity/pricing. These appear on the public Events page.</p>
+
+<form method="post" enctype="multipart/form-data" class="admin-form" style="margin-bottom:2rem">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="section" value="seminar">
+  <fieldset>
+    <legend>Seminar Hall</legend>
+    <div class="form-group"><label>Title</label><input name="s_title" value="{{ seminar.title if seminar else 'Seminar Hall' }}"></div>
+    <div class="form-group"><label>Description</label><textarea name="s_description" rows="3">{{ seminar.description if seminar else '' }}</textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Capacity</label><input name="s_capacity" type="number" value="{{ seminar.capacity if seminar else 150 }}"></div>
+      <div class="form-group"><label>Day rate (Rs.)</label><input name="s_day_rate" type="number" value="{{ seminar.day_rate if seminar else 15000 }}"></div>
+      <div class="form-group"><label>Hourly rate (Rs.)</label><input name="s_hourly_rate" type="number" value="{{ seminar.hourly_rate if seminar else 2000 }}"></div>
+    </div>
+    <label class="check"><input type="checkbox" name="s_enabled" value="1" {% if not seminar or seminar.is_enabled %}checked{% endif %}> Enabled</label>
+    <div class="form-group">
+      <label>Photo</label>
+      <input type="file" name="s_image" accept="image/*">
+      {% if seminar and seminar.image_url %}
+      <p><img src="{{ seminar.image_url }}" class="preview-img" alt="Seminar"></p>
+      {% endif %}
+    </div>
+    <button type="submit" class="btn-primary">Save seminar</button>
+  </fieldset>
+</form>
+
+<form method="post" enctype="multipart/form-data" class="admin-form" style="margin-bottom:2rem">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="section" value="outdoor">
+  <fieldset>
+    <legend>Outdoor Events</legend>
+    <div class="form-group"><label>Title</label><input name="o_title" value="{{ outdoor.title if outdoor else 'Outdoor Events' }}"></div>
+    <div class="form-group"><label>Description</label><textarea name="o_description" rows="3">{{ outdoor.description if outdoor else '' }}</textarea></div>
+    <div class="form-group"><label>Capacity</label><input name="o_capacity" type="number" value="{{ outdoor.capacity if outdoor else 500 }}"></div>
+    <div class="form-group"><label>Features (comma-separated)</label><input name="o_features" value="{{ outdoor.features if outdoor else 'weddings,parties,free parking' }}"></div>
+    <label class="check"><input type="checkbox" name="o_enabled" value="1" {% if not outdoor or outdoor.is_enabled %}checked{% endif %}> Enabled</label>
+    <div class="form-group">
+      <label>Photo</label>
+      <input type="file" name="o_image" accept="image/*">
+      {% if outdoor and outdoor.image_url %}
+      <p><img src="{{ outdoor.image_url }}" class="preview-img" alt="Outdoor"></p>
+      {% endif %}
+    </div>
+    <button type="submit" class="btn-primary">Save outdoor</button>
+  </fieldset>
+</form>
+
+<form method="post" enctype="multipart/form-data" class="admin-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="section" value="parking">
+  <fieldset>
+    <legend>Parking</legend>
+    <label class="check"><input type="checkbox" name="parking_free" value="1" {% if parking.free %}checked{% endif %}> Free parking</label>
+    <div class="form-group"><label>Parking info</label><textarea name="parking_info" rows="2">{{ parking.info }}</textarea></div>
+    <div class="form-group">
+      <label>Photo</label>
+      <input type="file" name="parking_image" accept="image/*">
+      {% if parking.image %}
+      <p><img src="{{ parking.image }}" class="preview-img" alt="Parking"></p>
+      {% endif %}
+    </div>
+    <button type="submit" class="btn-primary">Save parking</button>
+  </fieldset>
+</form>
+{% endblock %}

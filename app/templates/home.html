@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+{% block title %}Hotel Grand | Family Restaurant & Lodge | Urlabari, Morang{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-bg" aria-hidden="true"{% if hero.image_url %} style="background-image:url('{{ hero.image_url }}');background-size:cover;background-position:center center;background-repeat:no-repeat;"{% endif %}></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">Urlabari-05, Morang · 021-541955</p>
+    <h1>{{ hero.title }}</h1>
+    <p class="hero-subtitle">{{ hero.subtitle }}</p>
+    <p class="hero-body">{{ hero.body }}</p>
+    <div class="hero-ctas">
+      <a href="{{ url_for('booking.book') }}" class="btn btn-gold">Book a Room</a>
+      <a href="{{ url_for('rooms.list_rooms') }}" class="btn btn-outline">Explore Rooms</a>
+      <button type="button" class="btn btn-ghost" id="btn-get-direction-hero">Get Direction</button>
+      <a href="{{ url_for('contact.contact') }}" class="btn btn-ghost">Contact Us</a>
+    </div>
+  </div>
+</section>
+
+<section class="section rooms-preview">
+  <div class="container">
+    <header class="section-header animate-in">
+      <h2>Our Rooms</h2>
+      <p>Comfortable stays for families and travellers</p>
+    </header>
+    <div class="room-grid room-grid-with-features">
+      {% for room in rooms %}
+      <article class="room-card animate-in">
+        <div class="room-card-image">
+          {% if room.primary_image %}
+          <img src="{{ room.primary_image }}" alt="{{ room.name }}" loading="lazy">
+          {% else %}
+          <div class="img-placeholder">{{ room.name[0] }}</div>
+          {% endif %}
+        </div>
+        <div class="room-card-body">
+          <h3>{{ room.name }}</h3>
+          <p class="room-capacity">Up to {{ room.capacity }} guests</p>
+          <div class="price-block">
+            <div class="price-normal">
+              <span class="price">{{ room.rates.normal_formatted }}</span>
+              <span class="price-label">/ night · Normal Rate</span>
+            </div>
+            <div class="price-weekend">
+              <span class="price">{{ room.rates.weekend_formatted }}</span>
+              <span class="price-label">Weekend Offer · Sat & Sun</span>
+            </div>
+          </div>
+          <a href="{{ url_for('rooms.room_detail', slug=room.slug) }}" class="btn btn-outline btn-sm">View Details</a>
+        </div>
+      </article>
+      {% else %}
+      <p class="empty-state">Rooms will appear here once configured in the hotel system.</p>
+      {% endfor %}
+      {# Feature cards fill empty grid slots next to rooms #}
+      <a href="{{ url_for('main.events') }}" class="feature-mini-card animate-in">
+        <div class="feature-mini-img">
+          {% if seminar and seminar.image_url %}
+          <img src="{{ seminar.image_url }}" alt="Seminar Hall" loading="lazy">
+          {% else %}
+          <div class="img-placeholder">S</div>
+          {% endif %}
+        </div>
+        <div class="feature-mini-body">
+          <h3>Seminar Hall</h3>
+          <p>Up to {{ seminar.capacity if seminar else 150 }} guests</p>
+        </div>
+      </a>
+      <a href="{{ url_for('main.events') }}" class="feature-mini-card animate-in">
+        <div class="feature-mini-img">
+          {% if outdoor and outdoor.image_url %}
+          <img src="{{ outdoor.image_url }}" alt="Outdoor Events" loading="lazy">
+          {% else %}
+          <div class="img-placeholder">O</div>
+          {% endif %}
+        </div>
+        <div class="feature-mini-body">
+          <h3>Outdoor Events</h3>
+          <p>Up to {{ outdoor.capacity if outdoor else 500 }} guests</p>
+        </div>
+      </a>
+      <a href="{{ url_for('main.amenities_page') }}" class="feature-mini-card animate-in">
+        <div class="feature-mini-img">
+          {% if parking and parking.image %}
+          <img src="{{ parking.image }}" alt="Parking" loading="lazy">
+          {% else %}
+          <div class="img-placeholder">P</div>
+          {% endif %}
+        </div>
+        <div class="feature-mini-body">
+          <h3>Free Parking</h3>
+          <p>On-site free parking</p>
+        </div>
+      </a>
+      <a href="{{ url_for('main.location') }}" class="feature-mini-card feature-mini-map animate-in">
+        <div id="home-map" class="feature-mini-map-canvas" aria-label="Map"></div>
+        <div class="feature-mini-body">
+          <h3>Location</h3>
+          <p>Urlabari-05 · Get Direction</p>
+        </div>
+      </a>
+    </div>
+    <div class="section-cta">
+      <a href="{{ url_for('rooms.list_rooms') }}" class="btn btn-gold">View All Rooms</a>
+    </div>
+  </div>
+</section>
+
+<section class="section home-gallery">
+  <div class="container">
+    <header class="section-header animate-in">
+      <h2>Gallery</h2>
+      <p>A glimpse of Hotel Grand</p>
+    </header>
+  </div>
+  {% set gallery_imgs = gallery_images if gallery_images else [] %}
+  <div class="gallery-marquee gallery-marquee-left" aria-label="Photo gallery">
+    <div class="gallery-track">
+      {% for src in gallery_imgs %}
+      <div class="gallery-item"><img src="{{ src }}" alt="Hotel Grand gallery" loading="lazy"></div>
+      {% endfor %}
+      {% for src in gallery_imgs %}
+      <div class="gallery-item"><img src="{{ src }}" alt="" loading="lazy" aria-hidden="true"></div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="gallery-marquee gallery-marquee-right" aria-label="">
+    <div class="gallery-track gallery-track-reverse">
+      {% for src in gallery_imgs|reverse %}
+      <div class="gallery-item"><img src="{{ src }}" alt="Hotel Grand gallery" loading="lazy"></div>
+      {% endfor %}
+      {% for src in gallery_imgs|reverse %}
+      <div class="gallery-item"><img src="{{ src }}" alt="" loading="lazy" aria-hidden="true"></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section amenities-preview">
+  <div class="container">
+    <header class="section-header animate-in">
+      <h2>Amenities</h2>
+      <p>Everything you need for a pleasant stay</p>
+    </header>
+    <div class="amenity-grid">
+      {% if amenities %}
+        {% for a in amenities %}
+        <div class="amenity-item animate-in">
+          <span class="amenity-icon" aria-hidden="true">✦</span>
+          <span>{{ a.name }}</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        {% for name in ['Free WiFi','Free Parking','Restaurant','Bar','AC Rooms','Room Service','Seminar Hall','Outdoor Events','24/7 Front Desk','Laundry','TV','Attached Bathroom'] %}
+        <div class="amenity-item animate-in">
+          <span class="amenity-icon" aria-hidden="true">✦</span>
+          <span>{{ name }}</span>
+        </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="section about-preview">
+  <div class="container about-split">
+    <div class="about-text">
+      <h2>{{ about.title }}</h2>
+      <p>{{ about.body }}</p>
+      <a href="{{ url_for('main.about') }}" class="btn btn-outline">Learn More</a>
+    </div>
+    <div class="about-visual">
+      <div class="glass-card">
+        <p class="tagline">Family Restaurant & Lodge</p>
+        <p>Seminar Hall · Outdoor Events</p>
+        <p class="loc">Urlabari-05, Morang, Nepal</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+
+<section class="section reviews-section" id="reviews">
+  <div class="container">
+    <header class="section-header animate-in">
+      <h2>Guest Reviews</h2>
+      <p>What our guests say — and share your experience</p>
+    </header>
+    {% if reviews %}
+    <div class="review-grid">
+      {% for r in reviews %}
+      <blockquote class="review-card animate-in">
+        <div class="stars" aria-label="{{ r.rating }} out of 5">
+          {% for i in range(r.rating) %}★{% endfor %}
+        </div>
+        <p>{{ r.content }}</p>
+        <cite>— {{ r.author_name }}</cite>
+      </blockquote>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <form class="public-review-form animate-in" method="post" action="{{ url_for('main.submit_review') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <h3>Write a review</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="rev-name">Your name *</label>
+          <input type="text" id="rev-name" name="author_name" required maxlength="100" placeholder="Your name">
+        </div>
+        <div class="form-group">
+          <label for="rev-rating">Rating *</label>
+          <select id="rev-rating" name="rating">
+            {% for i in range(5,0,-1) %}<option value="{{ i }}">{{ i }} ★</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="rev-content">Your review *</label>
+        <textarea id="rev-content" name="content" rows="3" required maxlength="2000" placeholder="How was your stay?"></textarea>
+      </div>
+      <button type="submit" class="btn btn-gold btn-sm">Submit review</button>
+      <p class="muted small">Reviews appear after admin approval.</p>
+    </form>
+  </div>
+</section>
+
+<section class="section cta-band animate-in">
+  <div class="container cta-band-inner">
+    <h2>Ready to stay with us?</h2>
+    <p>Book your room or get directions to Hotel Grand</p>
+    <div class="hero-ctas">
+      <a href="{{ url_for('booking.book') }}" class="btn btn-gold">Book a Room</a>
+      <button type="button" class="btn btn-outline" id="btn-get-direction-cta">Get Direction</button>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var el = document.getElementById("home-map");
+  if (!el || typeof L === "undefined") return;
+  try {
+    var map = L.map(el, { zoomControl: false, attributionControl: false }).setView([26.6643, 87.6335], 14);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18 }).addTo(map);
+    L.marker([26.6643, 87.6335]).addTo(map);
+    setTimeout(function () { map.invalidateSize(); }, 300);
+  } catch (e) {}
+});
+</script>
+{% endblock %}

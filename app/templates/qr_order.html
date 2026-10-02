@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Order · {{ label }} · Hotel Grand Garden</title>
+  <style>
+    :root { --gold:#c9a227; --bg:#f7f4ec; --ink:#1a1a1a; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, sans-serif; background:var(--bg); color:var(--ink); }
+    header { background:#111; color:#fff; padding:1rem 1.25rem; position:sticky; top:0; z-index:10; }
+    header h1 { margin:0; font-size:1.05rem; color:var(--gold); letter-spacing:.06em; }
+    header p { margin:.2rem 0 0; font-size:.85rem; opacity:.85; }
+    main { max-width:720px; margin:0 auto; padding:1rem; padding-bottom:120px; }
+    .cat { margin:1.25rem 0 .5rem; font-size:.8rem; text-transform:uppercase; letter-spacing:.12em; color:#666; }
+    .item { display:flex; gap:.75rem; background:#fff; border-radius:12px; padding:.85rem; margin-bottom:.6rem; border:1px solid #eee; }
+    .item img { width:64px; height:64px; object-fit:cover; border-radius:8px; background:#eee; }
+    .item h3 { margin:0; font-size:.95rem; }
+    .item .price { color:var(--gold); font-weight:700; margin-top:.25rem; }
+    .item button { margin-left:auto; align-self:center; background:#111; color:var(--gold); border:none; border-radius:8px; padding:.45rem .75rem; font-weight:600; cursor:pointer; }
+    .bar { position:fixed; bottom:0; left:0; right:0; background:#111; color:#fff; padding:.85rem 1.25rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; }
+    .bar button { background:var(--gold); color:#111; border:none; border-radius:10px; padding:.7rem 1.2rem; font-weight:700; cursor:pointer; }
+    .cart-panel { display:none; background:#fff; border-radius:12px; padding:1rem; margin-top:1rem; border:1px solid #e8e2d4; }
+    .cart-panel.open { display:block; }
+    input, textarea { width:100%; padding:.65rem; border:1px solid #ddd; border-radius:8px; margin:.35rem 0; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>HOTEL GRAND GARDEN</h1>
+  <p>Ordering for <strong>{{ label }}</strong></p>
+</header>
+<main>
+  {% for block in menu %}
+    <div class="cat">{{ block.category.name }}</div>
+    {% for i in block.items %}
+    <div class="item">
+      {% if i.display_image %}
+        {% if i.display_image.startswith('http') %}
+        <img src="{{ i.display_image }}" alt="">
+        {% else %}
+        <img src="/static/{{ i.display_image }}" alt="">
+        {% endif %}
+      {% else %}
+        <div style="width:64px;height:64px;border-radius:8px;background:#f0eee8;display:flex;align-items:center;justify-content:center">🍽</div>
+      {% endif %}
+      <div>
+        <h3>{{ i.name }}</h3>
+        <div class="price">Rs. {{ '%.2f'|format(i.price|float) }}</div>
+      </div>
+      <button type="button" onclick='addItem({{ i.id }}, {{ i.name|tojson }}, {{ i.price }})'>+ Add</button>
+    </div>
+    {% endfor %}
+  {% else %}
+    <p style="text-align:center;padding:2rem;color:#888">Menu not available yet.</p>
+  {% endfor %}
+
+  <div class="cart-panel" id="cartPanel">
+    <h3 style="margin-top:0">Your order</h3>
+    <div id="cartLines"></div>
+    <p><strong>Total: Rs. <span id="cartTotal">0.00</span></strong></p>
+    <input id="custName" placeholder="Your name (optional)">
+    <textarea id="notes" rows="2" placeholder="Notes (optional)"></textarea>
+    <button type="button" onclick="submitOrder()" style="width:100%;background:#111;color:#c9a227;border:none;padding:.75rem;border-radius:10px;font-weight:700;margin-top:.5rem">Send to Kitchen</button>
+  </div>
+</main>
+<div class="bar">
+  <div><span id="cartCount">0</span> items · Rs. <span id="barTotal">0.00</span></div>
+  <button type="button" onclick="document.getElementById('cartPanel').classList.toggle('open')">View cart</button>
+</div>
+<script>
+const cart = {};
+const TOKEN = {{ token|tojson }};
+function addItem(id, name, price) {
+  if (!cart[id]) cart[id] = {id, name, price: parseFloat(price), qty: 0};
+  cart[id].qty++;
+  render();
+}
+function change(id, d) {
+  if (!cart[id]) return;
+  cart[id].qty += d;
+  if (cart[id].qty <= 0) delete cart[id];
+  render();
+}
+function render() {
+  let html = '', total = 0, count = 0;
+  Object.values(cart).forEach(c => {
+    total += c.qty * c.price; count += c.qty;
+    html += `<div style="display:flex;justify-content:space-between;padding:.35rem 0;border-bottom:1px solid #f0eee8">
+      <span>${c.name} × ${c.qty}</span>
+      <span>
+        <button onclick="change(${c.id},-1)" style="width:28px;height:28px;border:none;background:#eee;border-radius:6px">−</button>
+        <button onclick="change(${c.id},1)" style="width:28px;height:28px;border:none;background:#111;color:#c9a227;border-radius:6px">+</button>
+        Rs. ${(c.qty*c.price).toFixed(2)}
+      </span></div>`;
+  });
+  document.getElementById('cartLines').innerHTML = html || '<p style="color:#999">Cart empty</p>';
+  document.getElementById('cartTotal').textContent = total.toFixed(2);
+  document.getElementById('barTotal').textContent = total.toFixed(2);
+  document.getElementById('cartCount').textContent = count;
+}
+function submitOrder() {
+  const items = Object.values(cart).map(c => ({id: c.id, qty: c.qty}));
+  if (!items.length) { alert('Add items first'); return; }
+  fetch('/qr/' + TOKEN + '/submit', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      items,
+      customer_name: document.getElementById('custName').value,
+      notes: document.getElementById('notes').value
+    })
+  }).then(r => r.json()).then(d => {
+    if (d.ok) {
+      alert(d.message);
+      Object.keys(cart).forEach(k => delete cart[k]);
+      render();
+      document.getElementById('cartPanel').classList.remove('open');
+    } else alert(d.error || 'Failed');
+  }).catch(() => alert('Network error'));
+}
+render();
+</script>
+</body>
+</html>

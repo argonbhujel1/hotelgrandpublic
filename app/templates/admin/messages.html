@@ -1,0 +1,28 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Messages{% endblock %}
+{% block content %}
+<h1>Contact messages</h1>
+<table class="admin-table">
+  <thead><tr><th>When</th><th>Name</th><th>Contact</th><th>Message</th><th></th></tr></thead>
+  <tbody>
+  {% for m in messages %}
+  <tr class="{% if not m.is_read %}unread{% endif %}">
+    <td>{{ m.created_at.strftime('%Y-%m-%d %H:%M') if m.created_at else '' }}</td>
+    <td>{{ m.name }}</td>
+    <td>{{ m.phone or '' }} {{ m.email or '' }}</td>
+    <td>{{ m.message[:100] }}{% if m.message|length > 100 %}…{% endif %}</td>
+    <td>
+      {% if not m.is_read %}
+      <form method="post" action="{{ url_for('admin.message_read', mid=m.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn-sm">Mark read</button>
+      </form>
+      {% else %}Read{% endif %}
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5">No messages.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

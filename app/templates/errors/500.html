@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Something Went Wrong | Hotel Grand{% endblock %}
+{% block content %}
+<section class="section error-page">
+  <div class="container">
+    <h1>Something went wrong</h1>
+    <p>We are unable to complete your request right now. Please try again or contact us.</p>
+    <a href="{{ url_for('main.home') }}" class="btn btn-gold">Go Home</a>
+    <a href="tel:021-541955" class="btn btn-outline">Call 021-541955</a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Location | Hotel Grand{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <h1>Location</h1>
+    <p>Urlabari-05, Morang, Nepal</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container location-layout">
+    <div class="location-info">
+      <h2>Hotel Grand</h2>
+      <p>Family Restaurant & Lodge</p>
+      <address>
+        Urlabari-05, Morang, Nepal
+      </address>
+      <p><a href="tel:021-541955">021-541955</a></p>
+      <p><a href="mailto:hotelgrandnp@outlook.com">hotelgrandnp@outlook.com</a></p>
+      <div class="location-ctas">
+        <button type="button" class="btn btn-gold" id="btn-get-direction-page">Get Direction</button>
+        <a href="tel:021-541955" class="btn btn-outline">Call</a>
+      </div>
+      <p class="muted small">Get Direction opens an in-site map and calculates the route from your current location. Your location is not stored.</p>
+    </div>
+    <div class="location-map-wrap">
+      <div id="location-map" class="location-map" aria-label="Hotel location map"></div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof L === 'undefined') return;
+  var lat = {{ hotel.lat }};
+  var lng = {{ hotel.lng }};
+  var map = L.map('location-map').setView([lat, lng], 15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+  L.marker([lat, lng]).addTo(map).bindPopup('Hotel Grand').openPopup();
+});
+</script>
+{% endblock %}
