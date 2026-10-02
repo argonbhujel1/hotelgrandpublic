@@ -71,7 +71,10 @@ def get_public_rooms():
         out = []
         for rt in types:
             rooms = Room.query.filter_by(is_active=True, room_type=rt.name).order_by(Room.number).all()
-            out.append(_TypeView(rt.name, rooms=rooms, rt=rt))
+            rooms = [r for r in rooms if getattr(r, "show_on_website", True) is not False]
+            # Only list class if it has website rooms OR has class image/content from public admin
+            if rooms or rt:
+                out.append(_TypeView(rt.name, rooms=rooms, rt=rt))
         return out
 
     # Fallback: group HMS rooms by room_type string
@@ -90,6 +93,7 @@ def get_room_type_detail(type_name: str):
         (RoomType.name == type_name) | (RoomType.slug == type_name.lower().replace(" ", "-"))
     ).first()
     rooms = Room.query.filter_by(is_active=True, room_type=type_name).order_by(Room.number).all()
+    rooms = [r for r in rooms if getattr(r, "show_on_website", True) is not False]
     if rt:
         return _TypeView(rt.name, rooms=rooms, rt=rt)
     if rooms:
@@ -186,6 +190,7 @@ def get_available_rooms_for_type(room_type_id, check_in, check_out):
     rooms = [
         r for r in rooms
         if (getattr(r, "status", None) or "available").lower() in ("available", "clean", "")
+        and getattr(r, "show_on_website", True) is not False
     ]
 
     if not check_in or not check_out:
