@@ -146,6 +146,11 @@ def create_app(config_class=Config):
         except Exception:
             pass
         try:
+            from app.models.booking import migrate_booking_schema
+            migrate_booking_schema()
+        except Exception:
+            pass
+        try:
             ensure_booking_columns()
         except Exception:
             pass

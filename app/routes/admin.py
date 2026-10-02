@@ -19,6 +19,18 @@ from app.models.contact import ContactMessage
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
+def _safe_count(model):
+    try:
+        return model.query.count()
+    except Exception:
+        try:
+            from app import db
+            db.session.rollback()
+        except Exception:
+            pass
+        return 0
+
+
 ALLOWED_EXT = {"png", "jpg", "jpeg", "webp", "gif"}
 
 
@@ -128,7 +140,7 @@ def logout():
 def dashboard():
     stats = {
         "rooms": RoomType.query.count(),
-        "bookings": Booking.query.count(),
+        "bookings": _safe_count(Booking),
         "pending": Booking.query.filter_by(status="pending").count(),
         "messages": ContactMessage.query.filter_by(is_read=False).count(),
         "menu_items": MenuItem.query.count(),
