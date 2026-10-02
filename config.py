@@ -30,11 +30,11 @@ class Config:
     if _uri.startswith("sqlite"):
         SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}
     elif os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        from sqlalchemy.pool import NullPool
         SQLALCHEMY_ENGINE_OPTIONS = {
+            "poolclass": NullPool,
             "pool_pre_ping": True,
-            "pool_recycle": 280,
-            "pool_size": 1,
-            "max_overflow": 0,
+            "connect_args": {"connect_timeout": 10},
         }
     else:
         SQLALCHEMY_ENGINE_OPTIONS = {

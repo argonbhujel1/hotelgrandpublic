@@ -178,6 +178,13 @@ def create_app(config_class=Config):
         except Exception:
             pass
 
+    @app.teardown_appcontext
+    def _shutdown_session(exception=None):
+        try:
+            db.session.remove()
+        except Exception:
+            pass
+
     return app
 
 
