@@ -1,4 +1,5 @@
 from datetime import datetime
+from hotel_site.utils.timeutil import npt_now_naive
 from werkzeug.security import generate_password_hash, check_password_hash
 from hotel_site import db
 
@@ -10,7 +11,7 @@ class AdminUser(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=npt_now_naive)
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -26,4 +27,4 @@ class PaymentSetting(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(100), unique=True, nullable=False)
     value = db.Column(db.Text)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=npt_now_naive, onupdate=npt_now_naive)

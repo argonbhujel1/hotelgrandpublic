@@ -14,13 +14,16 @@
   {% for rt in types %}
   <tr>
     <td>
-      {% set img = rt.images.filter_by(is_primary=True).first() or rt.images.first() %}
-      {% if img %}<img src="{{ img.image_url }}" class="thumb" alt="">{% else %}—{% endif %}
+      {% set img = none %}
+      {% if rt.images is defined %}
+        {% set img = rt.images.filter_by(is_primary=True).first() or rt.images.first() %}
+      {% endif %}
+      {% if img and (img.image_url or img.url) %}<img src="{{ img.image_url or img.url }}" class="thumb" alt="">{% else %}—{% endif %}
     </td>
     <td><strong>{{ rt.name }}</strong><br><small>{{ rt.slug }}</small></td>
-    <td>Rs. {{ '{:,.0f}'.format(rt.base_price) }}</td>
+    <td>Rs. {{ '{:,.0f}'.format(rt.base_price or 0) }}</td>
     <td>{{ rt.capacity }}</td>
-    <td>{{ rt.rooms.count() }}</td>
+    <td>{{ room_counts.get(rt.id, 0) }}</td>
     <td>{% if rt.is_enabled %}Enabled{% else %}Disabled{% endif %}</td>
     <td class="actions">
       <a href="{{ url_for('admin.room_type_edit', type_id=rt.id) }}">Edit</a>

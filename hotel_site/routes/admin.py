@@ -267,8 +267,28 @@ def payment():
 @admin_bp.route("/rooms")
 @admin_required
 def rooms():
-    types = RoomType.query.order_by(RoomType.sort_order, RoomType.name).all()
-    return render_template("admin/rooms.html", types=types)
+    try:
+        types = RoomType.query.order_by(RoomType.sort_order, RoomType.name).all()
+    except Exception:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        types = []
+        flash("Could not load room classes. Tables may still be creating — refresh once.", "error")
+    room_counts = {}
+    try:
+        from hotel_site.models.room import Room
+        for rt in types:
+            room_counts[rt.id] = Room.query.filter(
+                (Room.room_type == rt.name) | (Room.room_type == (rt.slug or ""))
+            ).count()
+    except Exception:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+    return render_template("admin/rooms.html", types=types, room_counts=room_counts)
 
 
 @admin_bp.route("/rooms/type/new", methods=["GET", "POST"])
@@ -429,7 +449,25 @@ def booking_status(bid):
 @admin_bp.route("/menu")
 @admin_required
 def menu():
-    cats = MenuCategory.query.order_by(MenuCategory.sort_order).all()
+    try:
+        cats = MenuCategory.query.order_by(MenuCategory.sort_order).all()
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        cats = []
+        flash(f"Could not load menu categories. Refresh once. ({e})", "error")
+    # Preload items as lists so template never hits broken relationship columns
+    for c in cats:
+        try:
+            c._items_list = list(c.items.order_by(MenuItem.sort_order, MenuItem.name).all()) if hasattr(c.items, "order_by") else list(c.items)
+        except Exception:
+            try:
+                db.session.rollback()
+                c._items_list = MenuItem.query.filter_by(category_id=c.id).all()
+            except Exception:
+                c._items_list = []
     return render_template("admin/menu.html", categories=cats)
 
 

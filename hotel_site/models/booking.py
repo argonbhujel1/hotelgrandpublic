@@ -2,7 +2,8 @@
 Booking model aligned with HMS `bookings` table + optional public website columns.
 Shared Aiven DB: HMS creates core columns; public adds extras via migrate_booking_schema().
 """
-from datetime import datetime, date, time
+from datetime import datetime
+from hotel_site.utils.timeutil import npt_now_naive, date, time
 from hotel_site import db
 
 
@@ -27,8 +28,8 @@ class Booking(db.Model):
     notes = db.Column(db.Text)
     id_document = db.Column(db.String(100))
     created_by_id = db.Column(db.Integer)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=npt_now_naive)
+    updated_at = db.Column(db.DateTime, default=npt_now_naive, onupdate=npt_now_naive)
 
     # --- Public website extras (added by migrate if missing) ---
     booking_ref = db.Column(db.String(32), index=True)

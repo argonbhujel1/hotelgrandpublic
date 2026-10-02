@@ -50,7 +50,7 @@
       <tr><th></th><th>Name</th><th>Price</th><th>Web</th><th>QR</th><th>Avail</th><th></th></tr>
     </thead>
     <tbody>
-    {% for it in cat.items %}
+    {% for it in (cat._items_list if cat._items_list is defined else cat.items) %}
     <tr>
       <td>{% if it.image_url %}<img src="{{ it.image_url }}" class="menu-thumb" alt="">{% else %}—{% endif %}</td>
       <td>{{ it.name }}</td>

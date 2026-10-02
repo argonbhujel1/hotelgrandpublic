@@ -1,4 +1,5 @@
 from datetime import datetime
+from hotel_site.utils.timeutil import npt_now_naive
 from hotel_site import db
 
 
@@ -13,7 +14,7 @@ class MenuCategory(db.Model):
     sort_order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
     # legacy alias column if public admin used is_enabled
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=npt_now_naive)
 
     items = db.relationship("MenuItem", back_populates="category", lazy="dynamic")
 
@@ -35,8 +36,8 @@ class MenuItem(db.Model):
     show_on_website = db.Column(db.Boolean, default=True)
     show_on_qr = db.Column(db.Boolean, default=True)
     sort_order = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=npt_now_naive)
+    updated_at = db.Column(db.DateTime, default=npt_now_naive, onupdate=npt_now_naive)
 
     category = db.relationship("MenuCategory", back_populates="items")
 

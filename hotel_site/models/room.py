@@ -1,4 +1,5 @@
 from datetime import datetime
+from hotel_site.utils.timeutil import npt_now_naive
 from hotel_site import db
 
 
@@ -15,7 +16,7 @@ class RoomType(db.Model):
     amenities = db.Column(db.Text)
     is_enabled = db.Column(db.Boolean, default=True)
     sort_order = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=npt_now_naive)
 
     images = db.relationship("RoomImage", back_populates="room_type", lazy="dynamic")
 
@@ -56,7 +57,7 @@ class Room(db.Model):
     status = db.Column(db.String(20), default="available")
     is_active = db.Column(db.Boolean, default=True)
     show_on_website = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=npt_now_naive)
 
     @property
     def display_image(self):

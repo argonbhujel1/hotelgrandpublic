@@ -1,4 +1,5 @@
 from datetime import datetime
+from hotel_site.utils.timeutil import npt_now_naive
 from hotel_site import db
 
 
@@ -12,4 +13,4 @@ class ContactMessage(db.Model):
     subject = db.Column(db.String(200))
     message = db.Column(db.Text, nullable=False)
     is_read = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=npt_now_naive)

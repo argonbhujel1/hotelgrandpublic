@@ -69,6 +69,11 @@ def create_app(config_class=Config):
         return render_template("errors/403.html"), 403
 
     @app.context_processor
+    def inject_nepal_time():
+        from hotel_site.utils.timeutil import now_npt, format_npt
+        return {"now_npt": now_npt, "format_npt": format_npt, "NEPAL_TZ": "Asia/Kathmandu"}
+
+    @app.context_processor
     def inject_hotel():
         try:
             from hotel_site.services.content_service import get_hotel_info
@@ -138,7 +143,9 @@ def create_app(config_class=Config):
 
     with app.app_context():
         try:
+            import hotel_site.models  # noqa: F401
             db.create_all()
+            _ensure_public_schema()
         except Exception:
             pass
         try:
@@ -161,3 +168,40 @@ def create_app(config_class=Config):
             pass
 
     return app
+
+
+def _ensure_public_schema():
+    from sqlalchemy import text
+    patches = [
+        "ALTER TABLE menu_categories ADD COLUMN IF NOT EXISTS slug VARCHAR(120)",
+        "ALTER TABLE menu_categories ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE",
+        "ALTER TABLE menu_categories ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0",
+        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_orderable BOOLEAN DEFAULT TRUE",
+        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)",
+        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS show_on_website BOOLEAN DEFAULT TRUE",
+        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS show_on_qr BOOLEAN DEFAULT TRUE",
+        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE",
+        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT TRUE",
+        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0",
+        "ALTER TABLE room_types ADD COLUMN IF NOT EXISTS slug VARCHAR(140)",
+        "ALTER TABLE room_types ADD COLUMN IF NOT EXISTS is_enabled BOOLEAN DEFAULT TRUE",
+        "ALTER TABLE room_types ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0",
+        "ALTER TABLE room_types ADD COLUMN IF NOT EXISTS base_price NUMERIC(10,2) DEFAULT 0",
+        "ALTER TABLE room_types ADD COLUMN IF NOT EXISTS capacity INTEGER DEFAULT 2",
+        "ALTER TABLE room_types ADD COLUMN IF NOT EXISTS amenities TEXT",
+        "ALTER TABLE room_types ADD COLUMN IF NOT EXISTS description TEXT",
+        "ALTER TABLE room_images ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)",
+        "ALTER TABLE room_images ADD COLUMN IF NOT EXISTS url VARCHAR(500)",
+        "ALTER TABLE room_images ADD COLUMN IF NOT EXISTS is_primary BOOLEAN DEFAULT FALSE",
+        "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)",
+        "ALTER TABLE rooms ADD COLUMN IF NOT EXISTS show_on_website BOOLEAN DEFAULT TRUE",
+    ]
+    for sql in patches:
+        try:
+            db.session.execute(text(sql))
+            db.session.commit()
+        except Exception:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
