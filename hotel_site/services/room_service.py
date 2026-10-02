@@ -26,6 +26,7 @@ def _rates(base):
 class _TypeView:
     def __init__(self, name, rooms=None, rt=None):
         self.name = name
+        self.id = rt.id if rt is not None else None  # required for booking <select value>
         self.slug = (rt.slug if rt and rt.slug else name.lower().replace(" ", "-"))
         self.rooms = rooms or []
         self.capacity = (rt.capacity if rt else 2) or 2
@@ -213,10 +214,10 @@ def get_available_rooms_for_type(room_type_id, check_in, check_out):
         st = (getattr(r, "status", None) or "available").lower()
         return st not in ("maintenance", "disabled", "out_of_order")
 
-    rooms = [
-        r for r in rooms
-        if _ok_status(r) and getattr(r, "show_on_website", False) is True
-    ]
+    rooms = [r for r in rooms if _ok_status(r)]
+    # Prefer website-flagged; if none, still offer active rooms of this class
+    web = [r for r in rooms if getattr(r, "show_on_website", False) is True]
+    rooms = web if web else rooms
 
     if not check_in or not check_out:
         return rooms

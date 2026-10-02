@@ -41,6 +41,9 @@
     });
   }
 
+  // Run once on load (selected class + dates)
+  try { loadRooms(); updateQuote(); } catch (e) {}
+
   function loadRooms() {
     if (!roomIdSelect) return;
     if (!roomSelect.value || !checkIn.value || !checkOut.value) {
