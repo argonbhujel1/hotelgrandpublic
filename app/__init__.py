@@ -108,7 +108,43 @@ def create_app(config_class=Config):
         except Exception:
             pass
 
+
+    def ensure_admin_user():
+        """Create/update public admin from Vercel env if set."""
+        try:
+            from app.models.admin import AdminUser
+            username = (os.environ.get("ADMIN_USERNAME") or "admin").strip()
+            password = (os.environ.get("ADMIN_PASSWORD") or "").strip()
+            if not password:
+                # no password in env — only create default if table empty
+                if AdminUser.query.first() is None:
+                    u = AdminUser(username=username or "admin", is_active=True)
+                    u.set_password("admin123")
+                    db.session.add(u)
+                    db.session.commit()
+                return
+            user = AdminUser.query.filter_by(username=username).first()
+            if not user:
+                user = AdminUser(username=username, is_active=True)
+                db.session.add(user)
+            user.set_password(password)
+            user.is_active = True
+            db.session.commit()
+        except Exception:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+
     with app.app_context():
+        try:
+            db.create_all()
+        except Exception:
+            pass
+        try:
+            ensure_admin_user()
+        except Exception:
+            pass
         try:
             ensure_booking_columns()
         except Exception:
