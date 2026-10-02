@@ -267,7 +267,15 @@ def payment():
 @admin_bp.route("/rooms")
 @admin_required
 def rooms():
-    types = RoomType.query.order_by(RoomType.sort_order, RoomType.name).all()
+    try:
+        types = RoomType.query.order_by(RoomType.sort_order, RoomType.name).all()
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        flash(f"Rooms table error: {e}. Schema will auto-create on next cold start.", "error")
+        types = []
     return render_template("admin/rooms.html", types=types)
 
 
@@ -429,7 +437,15 @@ def booking_status(bid):
 @admin_bp.route("/menu")
 @admin_required
 def menu():
-    cats = MenuCategory.query.order_by(MenuCategory.sort_order).all()
+    try:
+        cats = MenuCategory.query.order_by(MenuCategory.sort_order).all()
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        flash(f"Menu table error: {e}. Try refreshing after deploy (schema auto-patches).", "error")
+        cats = []
     return render_template("admin/menu.html", categories=cats)
 
 
