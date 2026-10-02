@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from datetime import date
 from decimal import Decimal
-from app.models.room import Room
+from app.models.room import Room, RoomType
 from app.models.booking import Booking
 
 
@@ -24,56 +24,77 @@ def _rates(base):
 
 
 class _TypeView:
-    """Duck-typed object for rooms.html / room_detail.html templates."""
-    def __init__(self, name, rooms):
+    def __init__(self, name, rooms=None, rt=None):
         self.name = name
-        self.slug = name.lower().replace(" ", "-")
-        self.rooms = rooms
-        self.capacity = 2
-        self.description = rooms[0].description if rooms else ""
-        self.amenities = (rooms[0].amenities or "").split(",") if rooms else []
-        prices = [r.price for r in rooms if r.price is not None]
-        self.base_price = min(prices) if prices else Decimal("0")
+        self.slug = (rt.slug if rt and rt.slug else name.lower().replace(" ", "-"))
+        self.rooms = rooms or []
+        self.capacity = (rt.capacity if rt else 2) or 2
+        self.description = (rt.description if rt else None) or (rooms[0].description if rooms else "")
+        amenities = (rt.amenities if rt else None) or (rooms[0].amenities if rooms else "")
+        self.amenities = [a.strip() for a in (amenities or "").split(",") if a.strip()]
+        base = (rt.base_price if rt else None)
+        if base is None and rooms:
+            prices = [r.price for r in rooms if r.price is not None]
+            base = min(prices) if prices else Decimal("0")
+        self.base_price = base or Decimal("0")
         self.rates = _rates(self.base_price)
         imgs = []
-        for r in rooms:
-            src = r.display_image
-            if src:
-                if not src.startswith("http") and not src.startswith("/"):
-                    src = "/static/" + src
-                imgs.append(type("I", (), {"url": src, "alt": name})())
+        if rt is not None:
+            try:
+                from app.models.room import RoomImage
+                q = RoomImage.query.filter_by(room_type_id=rt.id).order_by(RoomImage.sort_order)
+                for im in q.all():
+                    src = im.display_url or im.image_url or im.url
+                    if src:
+                        imgs.append(type("I", (), {"url": src, "alt": name})())
+            except Exception:
+                pass
+        if not imgs and rooms:
+            for r in rooms:
+                src = r.display_image
+                if src:
+                    if not str(src).startswith("http") and not str(src).startswith("/"):
+                        src = "/static/" + src
+                    imgs.append(type("I", (), {"url": src, "alt": name})())
         self.images = imgs
         self.primary_image = imgs[0].url if imgs else ""
         self.available_count = sum(
-            1 for r in rooms if (r.status or "available").lower() in ("available", "clean", "")
-        )
+            1 for r in self.rooms if (getattr(r, "status", None) or "available").lower() in ("available", "clean", "")
+        ) if self.rooms else 1
+
 
 
 def get_public_rooms():
-    rooms = (
-        Room.query.filter_by(is_active=True)
-        .order_by(Room.room_type, Room.number)
-        .all()
-    )
-    # filter show_on_website when column present
-    filtered = []
-    for r in rooms:
-        show = getattr(r, "show_on_website", True)
-        if show is False:
-            continue
-        filtered.append(r)
+    # Prefer RoomType cards (seeded / public admin images)
+    types = RoomType.query.filter_by(is_enabled=True).order_by(RoomType.sort_order, RoomType.name).all()
+    if types:
+        out = []
+        for rt in types:
+            rooms = Room.query.filter_by(is_active=True, room_type=rt.name).order_by(Room.number).all()
+            out.append(_TypeView(rt.name, rooms=rooms, rt=rt))
+        return out
+
+    # Fallback: group HMS rooms by room_type string
+    rooms = Room.query.filter_by(is_active=True).order_by(Room.room_type, Room.number).all()
     groups = OrderedDict()
-    for r in filtered:
+    for r in rooms:
+        if getattr(r, "show_on_website", True) is False:
+            continue
         key = r.room_type or "Standard"
         groups.setdefault(key, []).append(r)
     return [_TypeView(k, v) for k, v in groups.items()]
 
 
 def get_room_type_detail(type_name: str):
+    rt = RoomType.query.filter(
+        (RoomType.name == type_name) | (RoomType.slug == type_name.lower().replace(" ", "-"))
+    ).first()
     rooms = Room.query.filter_by(is_active=True, room_type=type_name).order_by(Room.number).all()
-    if not rooms:
-        return None
-    return _TypeView(type_name, rooms)
+    if rt:
+        return _TypeView(rt.name, rooms=rooms, rt=rt)
+    if rooms:
+        return _TypeView(type_name, rooms=rooms)
+    return None
 
 
 def get_occupied_bookings():
@@ -91,13 +112,15 @@ def get_occupied_bookings():
         return []
     active = []
     for b in rows:
-        if b.check_out and b.check_out < today:
+        co = b.check_out
+        if co and hasattr(co, "date"):
+            co = co.date()
+        if co and co < today:
             continue
         active.append(b)
     return active
 
 
-# Backwards-compatible names used by main.py / older routes
 def get_enabled_room_types():
     try:
         return get_public_rooms()
@@ -108,29 +131,14 @@ def get_enabled_room_types():
 def get_room_type_by_slug(slug: str):
     if not slug:
         return None
-    try:
-        rooms = Room.query.filter_by(is_active=True).all()
-        types = {r.room_type for r in rooms if r.room_type}
-        match = next(
-            (
-                t
-                for t in types
-                if t.lower().replace(" ", "-") == slug.lower()
-                or t.lower() == slug.lower()
-            ),
-            None,
-        )
-        if not match:
-            match = slug.replace("-", " ").title()
-        return get_room_type_detail(match)
-    except Exception:
-        return None
+    rt = RoomType.query.filter_by(slug=slug).first()
+    if rt:
+        return get_room_type_detail(rt.name)
+    return get_room_type_detail(slug.replace("-", " ").title())
 
 
 def compute_pricing(room_type_id, check_in, check_out):
-    """Delegate to room_pricing; also accept type name string as id fallback."""
     from app.services.room_pricing import calculate_stay
-    from app.models.room import RoomType, Room
     from decimal import Decimal
 
     rt = None
@@ -139,70 +147,29 @@ def compute_pricing(room_type_id, check_in, check_out):
             rt = RoomType.query.get(int(room_type_id))
     except (TypeError, ValueError):
         rt = None
-
-    base = Decimal("0")
-    if rt and rt.base_price is not None:
-        base = Decimal(str(rt.base_price))
-    else:
-        # HMS mode: room_type_id may be unused; price from rooms of matching type name
-        name = str(room_type_id) if not isinstance(room_type_id, int) else None
-        q = Room.query.filter_by(is_active=True)
-        if name:
-            q = q.filter_by(room_type=name)
-        sample = q.first()
+    base = Decimal(str(rt.base_price)) if rt and rt.base_price is not None else Decimal("0")
+    if base == 0:
+        sample = Room.query.filter_by(is_active=True).first()
         if sample and sample.price is not None:
             base = Decimal(str(sample.price))
-        elif rt is None and isinstance(room_type_id, int):
-            # try rooms by nothing — average
-            sample = Room.query.filter_by(is_active=True).first()
-            if sample and sample.price is not None:
-                base = Decimal(str(sample.price))
-
     return calculate_stay(base, check_in, check_out)
 
 
 def get_available_rooms_for_type(room_type_id, check_in, check_out):
-    """
-    Rooms of a type not overlapping confirmed bookings in [check_in, check_out).
-    Supports RoomType.id (public) or falls back to all active HMS rooms.
-    """
-    from app.models.room import Room, RoomType
-    from app.models.booking import Booking
-    from sqlalchemy import and_, or_
+    from sqlalchemy import or_
 
-    rooms = []
     rt = None
     try:
         rt = RoomType.query.get(int(room_type_id)) if room_type_id is not None else None
     except (TypeError, ValueError):
         rt = None
-
     if rt:
-        # If HMS rooms use string room_type matching RoomType.name
-        rooms = (
-            Room.query.filter(
-                Room.is_active == True,
-                or_(
-                    Room.room_type == rt.name,
-                    # legacy column if present would be room_type_id — ignore if missing
-                ),
-            )
-            .order_by(Room.number)
-            .all()
-        )
+        rooms = Room.query.filter(Room.is_active == True, Room.room_type == rt.name).order_by(Room.number).all()
     else:
         rooms = Room.query.filter_by(is_active=True).order_by(Room.number).all()
-
-    # Filter by status
-    rooms = [
-        r
-        for r in rooms
-        if (r.status or "available").lower() in ("available", "clean", "")
-    ]
-
+    rooms = [r for r in rooms if (r.status or "available").lower() in ("available", "clean", "")]
     if not check_in or not check_out:
         return rooms
-
     busy_ids = set()
     try:
         overlaps = Booking.query.filter(
@@ -215,5 +182,4 @@ def get_available_rooms_for_type(room_type_id, check_in, check_out):
                 busy_ids.add(b.room_id)
     except Exception:
         pass
-
     return [r for r in rooms if r.id not in busy_ids]

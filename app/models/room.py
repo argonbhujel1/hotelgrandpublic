@@ -3,7 +3,6 @@ from app import db
 
 
 class RoomType(db.Model):
-    """Optional marketing types — may be empty when rooms come from HMS only."""
     __tablename__ = "room_types"
     __table_args__ = {"extend_existing": True}
 
@@ -28,14 +27,21 @@ class RoomImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     room_type_id = db.Column(db.Integer, db.ForeignKey("room_types.id"))
     url = db.Column(db.String(500))
+    image_url = db.Column(db.String(500))  # admin uses this name
     alt = db.Column(db.String(200))
+    alt_text = db.Column(db.String(200))
+    is_primary = db.Column(db.Boolean, default=False)
     sort_order = db.Column(db.Integer, default=0)
 
     room_type = db.relationship("RoomType", back_populates="images")
 
+    @property
+    def display_url(self):
+        return self.image_url or self.url or ""
+
 
 class Room(db.Model):
-    """Aligned with HMS `rooms` table for shared Aiven DB."""
+    """HMS-compatible rooms row."""
     __tablename__ = "rooms"
     __table_args__ = {"extend_existing": True}
 
