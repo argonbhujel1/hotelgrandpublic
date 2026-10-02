@@ -3,7 +3,8 @@ Booking model aligned with HMS `bookings` table + optional public website column
 Shared Aiven DB: HMS creates core columns; public adds extras via migrate_booking_schema().
 """
 from datetime import datetime
-from hotel_site.utils.timeutil import npt_now_naive, date, time
+from datetime import date, time
+from hotel_site.utils.timeutil import npt_now_naive
 from hotel_site import db
 
 
