@@ -70,8 +70,15 @@ def get_public_rooms():
     if types:
         out = []
         for rt in types:
-            rooms = Room.query.filter_by(is_active=True, room_type=rt.name).order_by(Room.number).all()
-            rooms = [r for r in rooms if getattr(r, "show_on_website", False) is True]
+            rooms = Room.query.filter(
+                Room.is_active == True,
+                (Room.room_type == rt.name) | (Room.room_type == (rt.slug or "")) | (Room.room_type.ilike(rt.name)),
+            ).order_by(Room.number).all()
+            web = [r for r in rooms if getattr(r, "show_on_website", False) is True]
+            # If admin linked rooms but flag missing, still show them for this public class
+            if not web and rooms:
+                web = rooms
+            rooms = web
             # Class image from public admin?
             has_image = False
             try:
@@ -184,20 +191,31 @@ def get_available_rooms_for_type(room_type_id, check_in, check_out):
             Room.query.filter(Room.is_active == True)
             .filter(
                 (Room.room_type == rt.name)
-                | (Room.room_type == rt.slug)
+                | (Room.room_type == (rt.slug or ""))
                 | (Room.room_type.ilike(rt.name))
+                | (Room.room_type.ilike(f"%{rt.name}%"))
             )
             .order_by(Room.number)
             .all()
         )
-        # If none linked by name yet, create is not done here — return empty
+        # Fallback: any website room if name mismatch
+        if not rooms:
+            rooms = Room.query.filter_by(is_active=True, show_on_website=True).order_by(Room.number).all()
+            # Prefer same type name loosely
+            named = [r for r in rooms if (r.room_type or "").lower() in ((rt.name or "").lower(), (rt.slug or "").lower())]
+            if named:
+                rooms = named
     else:
         rooms = Room.query.filter_by(is_active=True).order_by(Room.number).all()
 
+    # Website rooms only; status flexible (not maintenance/disabled)
+    def _ok_status(r):
+        st = (getattr(r, "status", None) or "available").lower()
+        return st not in ("maintenance", "disabled", "out_of_order")
+
     rooms = [
         r for r in rooms
-        if (getattr(r, "status", None) or "available").lower() in ("available", "clean", "")
-        and getattr(r, "show_on_website", False) is True
+        if _ok_status(r) and getattr(r, "show_on_website", False) is True
     ]
 
     if not check_in or not check_out:

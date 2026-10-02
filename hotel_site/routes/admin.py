@@ -344,10 +344,8 @@ def room_type_edit(type_id=None):
         rt.base_price = request.form.get("base_price", 0) or 0
         rt.capacity = int(request.form.get("capacity", 2) or 2)
         rt.amenities = request.form.get("amenities", "").strip()
-        if type_id is None:
-            rt.is_enabled = True  # new class always enabled on website
-        else:
-            rt.is_enabled = bool(request.form.get("is_enabled"))
+        # Always enabled — public admin classes are for the website (no manual toggle required)
+        rt.is_enabled = True
         rt.sort_order = int(request.form.get("sort_order", 0) or 0)
         db.session.flush()
 
