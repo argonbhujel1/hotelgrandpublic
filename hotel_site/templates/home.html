@@ -112,30 +112,46 @@
   <div class="container">
     <header class="section-header animate-in">
       <h2>Gallery</h2>
-      <p>A glimpse of Hotel Grand</p>
+      <p>Moments from Hotel Grand Garden · Urlabari</p>
     </header>
   </div>
   {% set gallery_imgs = gallery_images if gallery_images else [] %}
+  {% if gallery_imgs %}
   <div class="gallery-marquee gallery-marquee-left" aria-label="Photo gallery">
     <div class="gallery-track">
       {% for src in gallery_imgs %}
-      <div class="gallery-item"><img src="{{ src }}" alt="Hotel Grand gallery" loading="lazy"></div>
+      <div class="gallery-item">
+        <img src="{{ src }}" alt="Hotel Grand Garden Urlabari gallery" loading="lazy">
+        <span class="gallery-cap">Hotel Grand · Urlabari</span>
+      </div>
       {% endfor %}
       {% for src in gallery_imgs %}
-      <div class="gallery-item"><img src="{{ src }}" alt="" loading="lazy" aria-hidden="true"></div>
+      <div class="gallery-item" aria-hidden="true">
+        <img src="{{ src }}" alt="" loading="lazy">
+        <span class="gallery-cap">Hotel Grand · Urlabari</span>
+      </div>
       {% endfor %}
     </div>
   </div>
-  <div class="gallery-marquee gallery-marquee-right" aria-label="">
+  <div class="gallery-marquee gallery-marquee-right">
     <div class="gallery-track gallery-track-reverse">
       {% for src in gallery_imgs|reverse %}
-      <div class="gallery-item"><img src="{{ src }}" alt="Hotel Grand gallery" loading="lazy"></div>
+      <div class="gallery-item">
+        <img src="{{ src }}" alt="Hotel Grand Garden gallery" loading="lazy">
+        <span class="gallery-cap">Rooms · Restaurant · Events</span>
+      </div>
       {% endfor %}
       {% for src in gallery_imgs|reverse %}
-      <div class="gallery-item"><img src="{{ src }}" alt="" loading="lazy" aria-hidden="true"></div>
+      <div class="gallery-item" aria-hidden="true">
+        <img src="{{ src }}" alt="" loading="lazy">
+        <span class="gallery-cap">Rooms · Restaurant · Events</span>
+      </div>
       {% endfor %}
     </div>
   </div>
+  {% else %}
+  <div class="container"><p class="muted" style="text-align:center">Gallery photos coming soon.</p></div>
+  {% endif %}
 </section>
 
 <section class="section amenities-preview">
