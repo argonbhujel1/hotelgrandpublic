@@ -3,11 +3,11 @@ Demo seed for local development only.
 In production, HMS owns this data — do not re-seed production.
 """
 from decimal import Decimal
-from app import db
-from app.models.room import RoomType, Room, RoomImage
-from app.models.menu import MenuCategory, MenuItem
-from app.models.content import Review, Amenity, SeminarHall, OutdoorEvent, PageContent, HotelSetting
-from app.models.admin import AdminUser, PaymentSetting
+from hotel_site import db
+from hotel_site.models.room import RoomType, Room, RoomImage
+from hotel_site.models.menu import MenuCategory, MenuItem
+from hotel_site.models.content import Review, Amenity, SeminarHall, OutdoorEvent, PageContent, HotelSetting
+from hotel_site.models.admin import AdminUser, PaymentSetting
 
 
 def seed_demo():

@@ -1,0 +1,79 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Bookings{% endblock %}
+{% block content %}
+<h1>Bookings</h1>
+<div class="filters">
+  <a href="{{ url_for('admin.bookings') }}" class="{% if not status %}active{% endif %}">All</a>
+  {% for s in ['pending','confirmed','cancelled','checked_in','checked_out'] %}
+  <a href="{{ url_for('admin.bookings', status=s) }}" class="{% if status == s %}active{% endif %}">{{ s }}</a>
+  {% endfor %}
+</div>
+<table class="admin-table">
+  <thead>
+    <tr>
+      <th>Ref</th>
+      <th>Guest</th>
+      <th>Contact</th>
+      <th>Dates</th>
+      <th>Total</th>
+      <th>Payment</th>
+      <th>IP / Location</th>
+      <th>Proof</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for b in bookings %}
+  <tr>
+    <td><strong>{{ b.booking_ref }}</strong></td>
+    <td>{{ b.guest_name }}<br><span class="muted" style="font-size:0.8rem">{{ b.num_guests }} guest(s)</span></td>
+    <td>
+      <a href="tel:{{ b.guest_phone }}">{{ b.guest_phone }}</a><br>
+      {% if b.guest_email %}<a href="mailto:{{ b.guest_email }}">{{ b.guest_email }}</a>{% else %}<span class="muted">—</span>{% endif %}
+    </td>
+    <td>{{ b.check_in }} → {{ b.check_out }}<br><span class="muted" style="font-size:0.8rem">{{ b.room_number or '' }} · {{ b.total_nights }}n</span></td>
+    <td>Rs. {{ '{:,.0f}'.format(b.total_amount) }}</td>
+    <td>
+      {{ b.payment_status }}{% if b.advance_paid_claimed %} ✓{% endif %}<br>
+      <span class="muted" style="font-size:0.8rem">Txn: {{ b.advance_txn_number or '—' }}</span>
+    </td>
+    <td style="font-size:0.8rem;max-width:160px">
+      <code>{{ b.client_ip or '—' }}</code><br>
+      {{ b.ip_location or '—' }}
+    </td>
+    <td>
+      {% if b.payment_proof_url %}
+        {% if b.payment_proof_url.endswith('.pdf') %}
+        <a href="{{ b.payment_proof_url }}" target="_blank" rel="noopener">View PDF</a>
+        {% else %}
+        <a href="{{ b.payment_proof_url }}" target="_blank" rel="noopener">
+          <img src="{{ b.payment_proof_url }}" alt="Proof" class="thumb" style="width:56px;height:42px">
+        </a>
+        {% endif %}
+      {% else %}
+        <span class="muted">—</span>
+      {% endif %}
+    </td>
+    <td>
+      <form method="post" action="{{ url_for('admin.booking_status', bid=b.id) }}" class="inline-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <select name="status">
+          {% for s in ['pending','confirmed','cancelled','checked_in','checked_out'] %}
+          <option value="{{ s }}" {% if b.status == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+        <select name="payment_status">
+          {% for s in ['unpaid','partial','paid'] %}
+          <option value="{{ s }}" {% if b.payment_status == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn-sm">Update</button>
+      </form>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="9">No bookings.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

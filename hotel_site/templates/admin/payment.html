@@ -1,0 +1,44 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Payment & QR{% endblock %}
+{% block content %}
+<h1>Payment & QR</h1>
+<p class="muted">Advance payment is required before confirming a room booking. Upload QR code shown to customers.</p>
+<form method="post" enctype="multipart/form-data" class="admin-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <fieldset>
+    <legend>Advance payment</legend>
+    <label class="check">
+      <input type="checkbox" name="advance_required" value="1" {% if pay.advance_required %}checked{% endif %}>
+      Require advance payment before booking confirmation
+    </label>
+    <div class="form-row">
+      <div class="form-group"><label>Advance %</label><input name="advance_percent" type="number" min="0" max="100" value="{{ pay.advance_percent }}"></div>
+      <div class="form-group"><label>Or fixed amount (Rs.) — leave empty to use %</label><input name="advance_amount_fixed" value="{{ pay.advance_amount_fixed }}"></div>
+    </div>
+    <div class="form-group"><label>Instructions shown to guest</label>
+      <textarea name="payment_instructions" rows="3">{{ pay.payment_instructions }}</textarea>
+    </div>
+  </fieldset>
+  <fieldset>
+    <legend>QR & payment details</legend>
+    <div class="form-group">
+      <label>QR code image</label>
+      <input type="file" name="qr_image" accept="image/*">
+      {% if pay.qr_image %}
+      <p><img src="{{ pay.qr_image }}" alt="QR" class="preview-img qr-preview"></p>
+      <label class="check"><input type="checkbox" name="clear_qr" value="1"> Remove QR image</label>
+      {% endif %}
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>eSewa ID</label><input name="esewa_id" value="{{ pay.esewa_id }}"></div>
+      <div class="form-group"><label>Khalti ID</label><input name="khalti_id" value="{{ pay.khalti_id }}"></div>
+    </div>
+    <div class="form-group"><label>Bank name</label><input name="bank_name" value="{{ pay.bank_name }}"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Account number</label><input name="bank_account" value="{{ pay.bank_account }}"></div>
+      <div class="form-group"><label>Account name</label><input name="bank_account_name" value="{{ pay.bank_account_name }}"></div>
+    </div>
+  </fieldset>
+  <button type="submit" class="btn-primary">Save payment settings</button>
+</form>
+{% endblock %}

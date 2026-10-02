@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Events | Hotel Grand{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <h1>Events</h1>
+    <p>Seminar hall and outdoor spaces for every occasion</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container events-grid">
+    <article class="event-card">
+      <div class="event-visual">
+        {% if seminar and seminar.image_url %}
+        <img src="{{ seminar.image_url }}" alt="Seminar Hall" loading="lazy">
+        {% else %}
+        <div class="img-placeholder large">S</div>
+        {% endif %}
+      </div>
+      <div class="event-body">
+        <h2>{{ seminar.title if seminar else 'Seminar Hall' }}</h2>
+        <p class="event-meta">Capacity: {{ seminar.capacity if seminar else 150 }} people</p>
+        <div class="price-block">
+          <div class="price-normal">
+            <span class="price">Rs. {{ '{:,.0f}'.format(seminar.day_rate) if seminar else '15,000' }}</span>
+            <span class="price-label">/ day</span>
+          </div>
+          <div class="price-weekend">
+            <span class="price">Rs. {{ '{:,.0f}'.format(seminar.hourly_rate) if seminar else '2,000' }}</span>
+            <span class="price-label">/ hour</span>
+          </div>
+        </div>
+        {% if seminar and seminar.description %}
+        <p>{{ seminar.description }}</p>
+        {% else %}
+        <p>Spacious seminar hall ideal for meetings, workshops, training sessions and small conferences. Fully equipped and professionally maintained.</p>
+        {% endif %}
+        <a href="{{ url_for('contact.contact') }}" class="btn btn-gold">Enquire / Book</a>
+      </div>
+    </article>
+
+    <article class="event-card">
+      <div class="event-visual">
+        {% if outdoor and outdoor.image_url %}
+        <img src="{{ outdoor.image_url }}" alt="Outdoor Events" loading="lazy">
+        {% else %}
+        <div class="img-placeholder large">O</div>
+        {% endif %}
+      </div>
+      <div class="event-body">
+        <h2>{{ outdoor.title if outdoor else 'Outdoor Events' }}</h2>
+        <p class="event-meta">Capacity: {{ outdoor.capacity if outdoor else 500 }} people</p>
+        {% if outdoor and outdoor.description %}
+        <p>{{ outdoor.description }}</p>
+        {% else %}
+        <p>Beautiful outdoor grounds suitable for weddings, parties and large celebrations. Free parking available for guests.</p>
+        {% endif %}
+        <ul class="amenity-list">
+          <li>Weddings & receptions</li>
+          <li>Parties & celebrations</li>
+          <li>Free parking</li>
+        </ul>
+        <a href="{{ url_for('contact.contact') }}" class="btn btn-gold">Enquire</a>
+      </div>
+    </article>
+  </div>
+</section>
+{% endblock %}

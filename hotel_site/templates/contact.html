@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Contact | Hotel Grand{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <h1>Contact Us</h1>
+    <p>We would love to hear from you</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container contact-layout">
+    <div class="contact-info">
+      <h2>Hotel Grand</h2>
+      <p>Family Restaurant & Lodge</p>
+      <p>Urlabari-05, Morang, Nepal</p>
+      <p><a href="tel:021-541955" class="btn btn-outline btn-sm">Call 021-541955</a></p>
+      <p><a href="mailto:hotelgrandnp@outlook.com" class="btn btn-outline btn-sm">Email Us</a></p>
+      <button type="button" class="btn btn-gold btn-sm" id="btn-get-direction-contact">Get Direction</button>
+      <div class="policies-box">
+        <h3>Stay Policies</h3>
+        <pre class="policies-text">{{ policies }}</pre>
+      </div>
+    </div>
+    <form class="contact-form" method="post" action="{{ url_for('contact.contact') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <label for="name">Name *</label>
+        <input type="text" id="name" name="name" required maxlength="150" autocomplete="name">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" maxlength="150" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="phone">Phone</label>
+          <input type="tel" id="phone" name="phone" maxlength="30" autocomplete="tel">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="subject">Subject</label>
+        <input type="text" id="subject" name="subject" maxlength="200">
+      </div>
+      <div class="form-group">
+        <label for="message">Message *</label>
+        <textarea id="message" name="message" rows="5" required maxlength="2000"></textarea>
+      </div>
+      <button type="submit" class="btn btn-gold">Send Message</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

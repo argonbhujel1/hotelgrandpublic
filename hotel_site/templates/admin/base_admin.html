@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Admin{% endblock %} | Hotel Grand</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon/favicon.ico') }}" type="image/x-icon">
+  <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="admin-body">
+  {% if session.get('admin_id') %}
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      <strong>Hotel Grand</strong>
+      <small>Admin Panel</small>
+    </div>
+    <nav>
+      <a href="{{ url_for('admin.dashboard') }}" class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">Dashboard</a>
+      <a href="{{ url_for('admin.settings') }}" class="{% if request.endpoint == 'admin.settings' %}active{% endif %}">Settings & Hero</a>
+      <a href="{{ url_for('admin.rooms') }}" class="{% if 'room' in (request.endpoint or '') %}active{% endif %}">Room Classes</a>
+      <a href="{{ url_for('admin.bookings') }}" class="{% if request.endpoint == 'admin.bookings' %}active{% endif %}">Bookings</a>
+      <a href="{{ url_for('admin.payment') }}" class="{% if request.endpoint == 'admin.payment' %}active{% endif %}">Payment & QR</a>
+      <a href="{{ url_for('admin.events_admin') }}" class="{% if request.endpoint == 'admin.events_admin' %}active{% endif %}">Seminar & Outdoor</a>
+      <a href="{{ url_for('admin.menu') }}" class="{% if 'menu' in (request.endpoint or '') %}active{% endif %}">Menu</a>
+      <a href="{{ url_for('admin.gallery') }}" class="{% if request.endpoint == 'admin.gallery' %}active{% endif %}">Gallery</a>
+      <a href="{{ url_for('admin.reviews') }}" class="{% if request.endpoint == 'admin.reviews' %}active{% endif %}">Reviews</a>
+      <a href="{{ url_for('admin.messages') }}" class="{% if request.endpoint == 'admin.messages' %}active{% endif %}">Messages</a>
+      <a href="{{ url_for('main.home') }}" target="_blank">View Website ↗</a>
+      <a href="{{ url_for('admin.logout') }}" class="logout">Logout</a>
+    </nav>
+  </aside>
+  {% endif %}
+  <main class="admin-main {% if not session.get('admin_id') %}full{% endif %}">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="admin-flashes">
+        {% for cat, msg in messages %}
+        <div class="flash flash-{{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

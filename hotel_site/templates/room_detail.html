@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ room.name }} | Hotel Grand{% endblock %}
+
+{% block content %}
+<section class="page-hero page-hero-sm">
+  <div class="container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="{{ url_for('rooms.list_rooms') }}">Rooms</a>
+      <span>/</span>
+      <span>{{ room.name }}</span>
+    </nav>
+    <h1>{{ room.name }}</h1>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container room-detail">
+    <div class="room-gallery">
+      {% if room.images %}
+        {% for img in room.images %}
+        <img src="{{ img.url }}" alt="{{ img.alt }}" loading="lazy" class="{% if loop.first %}primary{% endif %}">
+        {% endfor %}
+      {% else %}
+        <div class="img-placeholder large">{{ room.name[0] }}</div>
+      {% endif %}
+    </div>
+    <div class="room-info">
+      <p class="room-capacity">Capacity: up to {{ room.capacity }} guests</p>
+      {% if room.description %}
+      <div class="room-desc-full">{{ room.description }}</div>
+      {% endif %}
+      {% if room.amenities %}
+      <ul class="amenity-list">
+        {% for a in room.amenities if a.strip() %}
+        <li>{{ a.strip() }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      <div class="price-block price-block-lg">
+        <div class="price-normal">
+          <span class="price">{{ room.rates.normal_formatted }}</span>
+          <span class="price-label">/ night · Normal Rate (Mon–Fri)</span>
+        </div>
+        <div class="price-weekend">
+          <span class="price">{{ room.rates.weekend_formatted }}</span>
+          <span class="price-label">Weekend Offer · Saturday & Sunday</span>
+        </div>
+      </div>
+      <a href="{{ url_for('booking.book', room=room.slug) }}" class="btn btn-gold">Book This Room</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

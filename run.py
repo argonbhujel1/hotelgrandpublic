@@ -1,6 +1,6 @@
 import os
-from app import create_app, db
-from app.models import *  # noqa: F401, F403
+from hotel_site import create_app, db
+from hotel_site.models import *  # noqa: F401, F403
 
 app = create_app()
 

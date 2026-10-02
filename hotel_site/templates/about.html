@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}About | Hotel Grand{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <h1>{{ about.title }}</h1>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container about-page">
+    <div class="about-content prose">
+      <p>{{ about.body }}</p>
+      <p>Located in Urlabari-05, Morang, we combine warm Nepali hospitality with modern comforts — air-conditioned rooms, a family restaurant and bar, a seminar hall for up to 150 guests, and outdoor event space for celebrations of up to 500 people.</p>
+      <p>Whether you are visiting for a family holiday, a business seminar, or a wedding, Hotel Grand is ready to welcome you.</p>
+    </div>
+    <div class="about-side">
+      <div class="glass-card">
+        <h3>Hotel Grand</h3>
+        <p>Family Restaurant & Lodge</p>
+        <p>Urlabari-05, Morang, Nepal</p>
+        <p><a href="tel:021-541955">021-541955</a></p>
+        <p><a href="mailto:hotelgrandnp@outlook.com">hotelgrandnp@outlook.com</a></p>
+        <a href="{{ url_for('booking.book') }}" class="btn btn-gold btn-sm">Book a Room</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section about-gallery-section">
+  <div class="container">
+    <header class="section-header">
+      <h2>Gallery</h2>
+      <p>Moments from Hotel Grand</p>
+    </header>
+    <div class="about-gallery-grid">
+      {% set gallery_imgs = gallery_images if gallery_images else [] %}
+      {% for src in gallery_imgs %}
+      <figure class="about-gallery-item">
+        <img src="{{ src }}" alt="Hotel Grand gallery photo" loading="lazy">
+      </figure>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

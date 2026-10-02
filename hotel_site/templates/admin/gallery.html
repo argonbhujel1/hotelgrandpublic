@@ -1,0 +1,32 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Gallery{% endblock %}
+{% block content %}
+<h1>Gallery</h1>
+<p class="muted">Images appear on the home page (moving gallery) and About page.</p>
+<form method="post" enctype="multipart/form-data" class="admin-form" style="margin-bottom:1.5rem">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="action" value="add">
+  <div class="form-group">
+    <label>Upload photos (multiple allowed)</label>
+    <input type="file" name="images" accept="image/*" multiple required>
+  </div>
+  <button type="submit" class="btn-primary">Upload to gallery</button>
+</form>
+{% if images %}
+<div class="gallery-admin-grid">
+  {% for url in images %}
+  <div class="gallery-admin-item">
+    <img src="{{ url }}" alt="Gallery">
+    <form method="post" onsubmit="return confirm('Remove this image?')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="delete">
+      <input type="hidden" name="url" value="{{ url }}">
+      <button type="submit" class="btn-sm" style="background:#c04040">×</button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted">No gallery images yet. Upload above.</p>
+{% endif %}
+{% endblock %}

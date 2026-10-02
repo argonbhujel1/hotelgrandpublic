@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Booking Confirmed | Hotel Grand{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <h1>Booking Received</h1>
+    <p>Reference: <strong>{{ booking.booking_ref }}</strong></p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container confirmation-card">
+    <p>Thank you, {{ booking.guest_name }}. We have received your booking request.</p>
+    <dl class="confirm-details">
+      <dt>Room</dt>
+      <dd>{{ booking.room_type.name if booking.room_type else '—' }} {% if booking.room_number %}(#{{ booking.room_number }}){% endif %}</dd>
+      <dt>Check-in</dt>
+      <dd>{{ booking.check_in.strftime('%d %b %Y') }} (from 12:00 PM)</dd>
+      <dt>Check-out</dt>
+      <dd>{{ booking.check_out.strftime('%d %b %Y') }} (by 11:00 AM)</dd>
+      <dt>Guests</dt>
+      <dd>{{ booking.num_guests }}</dd>
+      <dt>Nights</dt>
+      <dd>{{ booking.total_nights }}</dd>
+      <dt>Total</dt>
+      <dd class="total">Rs. {{ '{:,.0f}'.format(booking.total_amount) }}</dd>
+    </dl>
+    {% if nights %}
+    <h3>Nightly breakdown</h3>
+    <ul class="night-list">
+      {% for n in nights %}
+      <li>
+        <span>{{ n.date }}</span>
+        <span>{{ n.label }}</span>
+        <span>Rs. {{ '{:,.0f}'.format(n.rate) }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <p class="muted">Our team will confirm availability and contact you on {{ booking.guest_phone }}{% if booking.guest_email %} / {{ booking.guest_email }}{% endif %}.</p>
+    <div class="hero-ctas">
+      <a href="{{ url_for('main.home') }}" class="btn btn-outline">Back to Home</a>
+      <a href="tel:021-541955" class="btn btn-gold">Call Us</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

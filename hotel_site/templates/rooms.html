@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Rooms | Hotel Grand{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container">
+    <h1>Our Rooms</h1>
+    <p>Choose the perfect space for your stay in Urlabari</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="room-grid room-grid-full">
+      {% for room in rooms %}
+      <article class="room-card">
+        <div class="room-card-image">
+          {% if room.primary_image %}
+          <img src="{{ room.primary_image }}" alt="{{ room.name }}" loading="lazy">
+          {% else %}
+          <div class="img-placeholder">{{ room.name[0] }}</div>
+          {% endif %}
+        </div>
+        <div class="room-card-body">
+          <h2>{{ room.name }}</h2>
+          <p class="room-capacity">Up to {{ room.capacity }} guests</p>
+          {% if room.description %}
+          <p class="room-desc">{{ room.description[:140] }}{% if room.description|length > 140 %}…{% endif %}</p>
+          {% endif %}
+          <div class="price-block">
+            <div class="price-normal">
+              <span class="price">{{ room.rates.normal_formatted }}</span>
+              <span class="price-label">/ night · Normal Rate</span>
+            </div>
+            <div class="price-weekend">
+              <span class="price">{{ room.rates.weekend_formatted }}</span>
+              <span class="price-label">Weekend Offer · Saturday & Sunday</span>
+            </div>
+          </div>
+          <div class="card-actions">
+            <a href="{{ url_for('rooms.room_detail', slug=room.slug) }}" class="btn btn-outline btn-sm">Details</a>
+            <a href="{{ url_for('booking.book', room=room.slug) }}" class="btn btn-gold btn-sm">Book</a>
+          </div>
+        </div>
+      </article>
+      {% else %}
+      <p class="empty-state">No rooms are currently listed. Please check back later or contact us.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

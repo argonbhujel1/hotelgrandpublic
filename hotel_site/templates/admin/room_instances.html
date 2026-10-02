@@ -1,0 +1,58 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Rooms — {{ rt.name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>{{ rt.name }} — Room numbers</h1>
+  <a href="{{ url_for('admin.rooms') }}" class="btn-link">← Classes</a>
+</div>
+<p class="muted">Class photo is shared. Add each physical room number here.</p>
+
+<form method="post" class="inline-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="action" value="add">
+  <input name="room_number" placeholder="Room number e.g. 101" required>
+  <input name="floor" placeholder="Floor">
+  <select name="status">
+    <option value="available">available</option>
+    <option value="occupied">occupied</option>
+    <option value="maintenance">maintenance</option>
+  </select>
+  <button type="submit" class="btn-primary">Add room</button>
+</form>
+
+<table class="admin-table">
+  <thead><tr><th>Number</th><th>Floor</th><th>Status</th><th>Enabled</th><th></th></tr></thead>
+  <tbody>
+  {% for room in rooms %}
+  <tr>
+    <td>{{ room.room_number }}</td>
+    <td>{{ room.floor or '—' }}</td>
+    <td>
+      <form method="post" class="inline-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="update">
+        <input type="hidden" name="room_id" value="{{ room.id }}">
+        <select name="status" onchange="this.form.submit()">
+          {% for s in ['available','occupied','maintenance','disabled'] %}
+          <option value="{{ s }}" {% if room.status == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+        <label class="check"><input type="checkbox" name="is_enabled" value="1" {% if room.is_enabled %}checked{% endif %} onchange="this.form.submit()"> On</label>
+      </form>
+    </td>
+    <td>{{ 'Yes' if room.is_enabled else 'No' }}</td>
+    <td>
+      <form method="post" onsubmit="return confirm('Remove room {{ room.room_number }}?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="delete">
+        <input type="hidden" name="room_id" value="{{ room.id }}">
+        <button type="submit" class="link-danger">Delete</button>
+      </form>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5">No rooms in this class yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

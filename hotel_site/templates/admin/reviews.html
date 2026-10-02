@@ -1,0 +1,46 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Reviews{% endblock %}
+{% block content %}
+<h1>Reviews</h1>
+<p class="muted" style="margin-bottom:1rem">Public guests can submit reviews on the website. Unpublished ones need approval here.</p>
+<form method="post" class="admin-form compact">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="form-row">
+    <div class="form-group" style="margin:0">
+      <label>Author name</label>
+      <input name="author_name" placeholder="Author name" required>
+    </div>
+    <div class="form-group" style="margin:0">
+      <label>Rating</label>
+      <select name="rating">{% for i in range(5,0,-1) %}<option value="{{ i }}">{{ i }} ★</option>{% endfor %}</select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Review text</label>
+    <textarea name="content" rows="3" placeholder="Review text" required></textarea>
+  </div>
+  <label class="check"><input type="checkbox" name="is_published" value="1" checked> Published</label>
+  <button type="submit" class="btn-primary">Add review</button>
+</form>
+<table class="admin-table">
+  <thead><tr><th>Author</th><th>Rating</th><th>Content</th><th>Published</th><th></th></tr></thead>
+  <tbody>
+  {% for r in reviews %}
+  <tr>
+    <td>{{ r.author_name }}</td>
+    <td>{{ r.rating }}★</td>
+    <td>{{ r.content[:80] }}{% if r.content|length > 80 %}…{% endif %}</td>
+    <td>{{ 'Yes' if r.is_published else 'No' }}</td>
+    <td>
+      <form method="post" action="{{ url_for('admin.review_toggle', rid=r.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn-sm">{{ 'Hide' if r.is_published else 'Show' }}</button>
+      </form>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5">No reviews yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+<div class="stat-grid">
+  <div class="stat-card"><span class="stat-n">{{ stats.rooms }}</span><span class="stat-l">Room classes</span></div>
+  <div class="stat-card"><span class="stat-n">{{ stats.bookings }}</span><span class="stat-l">Bookings</span></div>
+  <div class="stat-card warn"><span class="stat-n">{{ stats.pending }}</span><span class="stat-l">Pending</span></div>
+  <div class="stat-card"><span class="stat-n">{{ stats.messages }}</span><span class="stat-l">Unread messages</span></div>
+  <div class="stat-card"><span class="stat-n">{{ stats.menu_items }}</span><span class="stat-l">Menu items</span></div>
+</div>
+<h2>Recent bookings</h2>
+<table class="admin-table">
+  <thead><tr><th>Ref</th><th>Guest</th><th>Check-in</th><th>Total</th><th>Status</th><th>Payment</th></tr></thead>
+  <tbody>
+  {% for b in recent %}
+  <tr>
+    <td>{{ b.booking_ref }}</td>
+    <td>{{ b.guest_name }}</td>
+    <td>{{ b.check_in }}</td>
+    <td>Rs. {{ '{:,.0f}'.format(b.total_amount) }}</td>
+    <td><span class="badge">{{ b.status }}</span></td>
+    <td>{{ b.payment_status }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6">No bookings yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
