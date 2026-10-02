@@ -344,7 +344,10 @@ def room_type_edit(type_id=None):
         rt.base_price = request.form.get("base_price", 0) or 0
         rt.capacity = int(request.form.get("capacity", 2) or 2)
         rt.amenities = request.form.get("amenities", "").strip()
-        rt.is_enabled = bool(request.form.get("is_enabled"))
+        if type_id is None:
+            rt.is_enabled = True  # new class always enabled on website
+        else:
+            rt.is_enabled = bool(request.form.get("is_enabled"))
         rt.sort_order = int(request.form.get("sort_order", 0) or 0)
         db.session.flush()
 
@@ -413,6 +416,7 @@ def room_instances(type_id):
                         existing.show_on_website = True
                         if request.form.get("status"):
                             existing.status = request.form.get("status")
+                        rt.is_enabled = True
                         db.session.commit()
                         flash(f"Room {num} linked to {rt.name} and shown on website.", "success")
                     else:
@@ -427,8 +431,9 @@ def room_instances(type_id):
                             is_active=True,
                             show_on_website=True,
                         ))
+                        rt.is_enabled = True
                         db.session.commit()
-                        flash(f"Room {num} added to {rt.name}.", "success")
+                        flash(f"Room {num} added to {rt.name} (class enabled on website).", "success")
                 except Exception as e:
                     try:
                         db.session.rollback()
