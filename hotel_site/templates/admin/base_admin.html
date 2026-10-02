@@ -6,15 +6,19 @@
   <title>{% block title %}Admin{% endblock %} | Hotel Grand</title>
   <link rel="icon" href="{{ url_for('static', filename='favicon/favicon.ico') }}" type="image/x-icon">
   <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}" type="image/png">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/logo.png') }}">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
 </head>
 <body class="admin-body">
   {% if session.get('admin_id') %}
   <aside class="admin-sidebar">
-    <div class="sidebar-brand">
-      <strong>Hotel Grand</strong>
-      <small>Admin Panel</small>
+    <div class="sidebar-brand" style="display:flex;align-items:center;gap:.6rem">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Hotel Grand" style="height:36px;width:auto;border-radius:6px;background:#fff;padding:2px">
+      <div>
+        <strong>Hotel Grand</strong>
+        <small style="display:block;opacity:.75">Admin Panel</small>
+      </div>
     </div>
     <nav>
       <a href="{{ url_for('admin.dashboard') }}" class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">Dashboard</a>

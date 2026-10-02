@@ -173,6 +173,7 @@ def create_app(config_class=Config):
 def _ensure_public_schema():
     from sqlalchemy import text
     patches = [
+        "ALTER TABLE menu_categories ADD COLUMN IF NOT EXISTS description TEXT",
         "ALTER TABLE menu_categories ADD COLUMN IF NOT EXISTS slug VARCHAR(120)",
         "ALTER TABLE menu_categories ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE",
         "ALTER TABLE menu_categories ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0",

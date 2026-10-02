@@ -268,6 +268,12 @@ def payment():
 @admin_required
 def rooms():
     try:
+        from hotel_site import _ensure_public_schema
+        _ensure_public_schema()
+    except Exception:
+        pass
+
+    try:
         types = RoomType.query.order_by(RoomType.sort_order, RoomType.name).all()
     except Exception:
         try:
@@ -354,22 +360,42 @@ def room_instances(type_id):
         action = request.form.get("action")
         if action == "add":
             num = request.form.get("room_number", "").strip()
-            if num:
-                # HMS-compatible Room row
-                db.session.add(Room(
-                    number=num,
-                    room_type=rt.name,
-                    price=rt.base_price or 0,
-                    description=rt.description,
-                    amenities=rt.amenities,
-                    image_url=(rt.images.filter_by(is_primary=True).first().display_url
-                               if rt.images.count() else None),
-                    status=request.form.get("status", "available") or "available",
-                    is_active=True,
-                    show_on_website=True,
-                ))
-                db.session.commit()
-                flash(f"Room {num} added to {rt.name}.", "success")
+            if not num:
+                flash("Room number required.", "error")
+            else:
+                try:
+                    existing = Room.query.filter_by(number=num).first()
+                    if existing:
+                        flash(f"Room {num} already exists.", "error")
+                    else:
+                        img = None
+                        try:
+                            primary = rt.images.filter_by(is_primary=True).first()
+                            if not primary:
+                                primary = rt.images.first()
+                            if primary:
+                                img = primary.display_url or primary.image_url or primary.url
+                        except Exception:
+                            img = None
+                        db.session.add(Room(
+                            number=num,
+                            room_type=rt.name,
+                            price=rt.base_price or 0,
+                            description=rt.description,
+                            amenities=rt.amenities,
+                            image_url=img,
+                            status=request.form.get("status", "available") or "available",
+                            is_active=True,
+                            show_on_website=True,
+                        ))
+                        db.session.commit()
+                        flash(f"Room {num} added to {rt.name}.", "success")
+                except Exception as e:
+                    try:
+                        db.session.rollback()
+                    except Exception:
+                        pass
+                    flash(f"Could not add room: {e}", "error")
         elif action == "update":
             rid = request.form.get("room_id") or "0"
             try:
@@ -449,6 +475,12 @@ def booking_status(bid):
 @admin_bp.route("/menu")
 @admin_required
 def menu():
+    try:
+        from hotel_site import _ensure_public_schema
+        _ensure_public_schema()
+    except Exception:
+        pass
+
     try:
         cats = MenuCategory.query.order_by(MenuCategory.sort_order).all()
     except Exception as e:
