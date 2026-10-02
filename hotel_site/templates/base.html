@@ -12,7 +12,10 @@
   <meta property="og:url" content="https://hotelgrand.com.np{{ request.path }}">
   <meta property="og:locale" content="en_NP">
   <meta name="theme-color" content="#111111">
-  {% if hotel and hotel.logo_url %}
+  {% if hotel and hotel.favicon_url %}
+  <link rel="icon" href="{{ hotel.favicon_url }}">
+  <link rel="apple-touch-icon" href="{{ hotel.favicon_url }}">
+  {% elif hotel and hotel.logo_url %}
   <link rel="icon" href="{{ hotel.logo_url }}" type="image/png">
   <link rel="apple-touch-icon" href="{{ hotel.logo_url }}">
   {% else %}

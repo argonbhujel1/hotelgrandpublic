@@ -32,6 +32,7 @@ def get_hotel_info():
         "lat": float(get_setting("latitude") or current_app.config["HOTEL_LAT"]),
         "lng": float(get_setting("longitude") or current_app.config["HOTEL_LNG"]),
         "logo_url": get_setting("logo_url") or "",
+        "favicon_url": get_setting("favicon_url") or get_setting("logo_url") or "",
     }
 
 

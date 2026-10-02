@@ -74,6 +74,17 @@ def create_app(config_class=Config):
         return {"now_npt": now_npt, "format_npt": format_npt, "NEPAL_TZ": "Asia/Kathmandu"}
 
     @app.context_processor
+    def inject_admin_brand():
+        try:
+            from hotel_site.services.content_service import get_setting
+            return {
+                "admin_logo_url": get_setting("logo_url") or "",
+                "admin_favicon_url": get_setting("favicon_url") or get_setting("logo_url") or "",
+            }
+        except Exception:
+            return {"admin_logo_url": "", "admin_favicon_url": ""}
+
+    @app.context_processor
     def inject_hotel():
         try:
             from hotel_site.services.content_service import get_hotel_info

@@ -4,8 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Admin{% endblock %} | Hotel Grand</title>
-  <link rel="icon" href="{{ url_for('static', filename='favicon/favicon.ico') }}?v=2" type="image/x-icon">
-  <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}?v=2" type="image/png">
+  {% if admin_favicon_url %}
+  <link rel="icon" href="{{ admin_favicon_url }}" type="image/x-icon">
+  {% else %}
+  <link rel="icon" href="{{ url_for('static', filename='favicon/favicon.ico') }}?v=3" type="image/x-icon">
+  <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}?v=3" type="image/png">
+  {% endif %}
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/logo.png') }}">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
@@ -14,7 +18,7 @@
   {% if session.get('admin_id') %}
   <aside class="admin-sidebar">
     <div class="sidebar-brand" style="display:flex;align-items:center;gap:.6rem">
-      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Hotel Grand" style="height:36px;width:auto;border-radius:6px;background:#fff;padding:2px">
+      <img src="{{ admin_logo_url or url_for('static', filename='images/logo.png') }}" alt="Hotel Grand" style="height:36px;width:auto;border-radius:6px;background:#fff;padding:2px">
       <div>
         <strong>Hotel Grand</strong>
         <small style="display:block;opacity:.75">Admin Panel</small>

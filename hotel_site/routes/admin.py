@@ -31,7 +31,7 @@ def _safe_count(model):
         return 0
 
 
-ALLOWED_EXT = {"png", "jpg", "jpeg", "webp", "gif"}
+ALLOWED_EXT = {"png", "jpg", "jpeg", "webp", "gif", "ico", "svg"}
 
 
 def admin_required(f):
@@ -389,19 +389,33 @@ def room_instances(type_id):
                 flash("Room number required.", "error")
             else:
                 try:
+                    img = None
+                    try:
+                        primary = rt.images.filter_by(is_primary=True).first()
+                        if not primary:
+                            primary = rt.images.first()
+                        if primary:
+                            img = primary.display_url or primary.image_url or primary.url
+                    except Exception:
+                        img = None
                     existing = Room.query.filter_by(number=num).first()
                     if existing:
-                        flash(f"Room {num} already exists.", "error")
+                        # Claim HMS/QR room for this public class (enable website)
+                        existing.room_type = rt.name
+                        existing.price = rt.base_price or existing.price or 0
+                        if rt.description:
+                            existing.description = rt.description
+                        if rt.amenities:
+                            existing.amenities = rt.amenities
+                        if img:
+                            existing.image_url = img
+                        existing.is_active = True
+                        existing.show_on_website = True
+                        if request.form.get("status"):
+                            existing.status = request.form.get("status")
+                        db.session.commit()
+                        flash(f"Room {num} linked to {rt.name} and shown on website.", "success")
                     else:
-                        img = None
-                        try:
-                            primary = rt.images.filter_by(is_primary=True).first()
-                            if not primary:
-                                primary = rt.images.first()
-                            if primary:
-                                img = primary.display_url or primary.image_url or primary.url
-                        except Exception:
-                            img = None
                         db.session.add(Room(
                             number=num,
                             room_type=rt.name,

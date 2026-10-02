@@ -72,10 +72,17 @@ def get_public_rooms():
         for rt in types:
             rooms = Room.query.filter_by(is_active=True, room_type=rt.name).order_by(Room.number).all()
             rooms = [r for r in rooms if getattr(r, "show_on_website", False) is True]
-            # Only list class if it has website rooms OR has class image/content from public admin
-            if rooms or rt:
+            # Class image from public admin?
+            has_image = False
+            try:
+                from hotel_site.models.room import RoomImage
+                has_image = RoomImage.query.filter_by(room_type_id=rt.id).first() is not None
+            except Exception:
+                has_image = False
+            # Show only if website rooms exist, or public admin uploaded class image / description
+            if rooms or has_image or (rt.description and (rt.base_price or 0) > 0):
                 out.append(_TypeView(rt.name, rooms=rooms, rt=rt))
-        return out
+        return out if out else []
 
     # Fallback: group HMS rooms by room_type string
     rooms = Room.query.filter_by(is_active=True).order_by(Room.room_type, Room.number).all()
