@@ -1,5 +1,11 @@
 """Production WSGI entry (Gunicorn, Vercel, Railway, etc.)."""
 import os
+import sys
+
+# Ensure package import wins (directory app/) over any leftover app.py
+_ROOT = os.path.dirname(os.path.abspath(__file__))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
 
 if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
     os.environ.setdefault("FLASK_ENV", "production")
@@ -8,9 +14,10 @@ if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
     except OSError:
         pass
 
-from app import create_app, db
+from app import create_app, db  # app package (folder)
 
-app = create_app()
+application = create_app()
+app = application  # Vercel / Flask look for `app`
 
 with app.app_context():
     try:
@@ -20,6 +27,3 @@ with app.app_context():
             app.logger.warning("create_all note: %s", e)
         except Exception:
             pass
-
-# Aliases some hosts look for
-application = app
