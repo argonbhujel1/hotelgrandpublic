@@ -125,3 +125,95 @@ def get_room_type_by_slug(slug: str):
         return get_room_type_detail(match)
     except Exception:
         return None
+
+
+def compute_pricing(room_type_id, check_in, check_out):
+    """Delegate to room_pricing; also accept type name string as id fallback."""
+    from app.services.room_pricing import calculate_stay
+    from app.models.room import RoomType, Room
+    from decimal import Decimal
+
+    rt = None
+    try:
+        if room_type_id is not None:
+            rt = RoomType.query.get(int(room_type_id))
+    except (TypeError, ValueError):
+        rt = None
+
+    base = Decimal("0")
+    if rt and rt.base_price is not None:
+        base = Decimal(str(rt.base_price))
+    else:
+        # HMS mode: room_type_id may be unused; price from rooms of matching type name
+        name = str(room_type_id) if not isinstance(room_type_id, int) else None
+        q = Room.query.filter_by(is_active=True)
+        if name:
+            q = q.filter_by(room_type=name)
+        sample = q.first()
+        if sample and sample.price is not None:
+            base = Decimal(str(sample.price))
+        elif rt is None and isinstance(room_type_id, int):
+            # try rooms by nothing — average
+            sample = Room.query.filter_by(is_active=True).first()
+            if sample and sample.price is not None:
+                base = Decimal(str(sample.price))
+
+    return calculate_stay(base, check_in, check_out)
+
+
+def get_available_rooms_for_type(room_type_id, check_in, check_out):
+    """
+    Rooms of a type not overlapping confirmed bookings in [check_in, check_out).
+    Supports RoomType.id (public) or falls back to all active HMS rooms.
+    """
+    from app.models.room import Room, RoomType
+    from app.models.booking import Booking
+    from sqlalchemy import and_, or_
+
+    rooms = []
+    rt = None
+    try:
+        rt = RoomType.query.get(int(room_type_id)) if room_type_id is not None else None
+    except (TypeError, ValueError):
+        rt = None
+
+    if rt:
+        # If HMS rooms use string room_type matching RoomType.name
+        rooms = (
+            Room.query.filter(
+                Room.is_active == True,
+                or_(
+                    Room.room_type == rt.name,
+                    # legacy column if present would be room_type_id — ignore if missing
+                ),
+            )
+            .order_by(Room.number)
+            .all()
+        )
+    else:
+        rooms = Room.query.filter_by(is_active=True).order_by(Room.number).all()
+
+    # Filter by status
+    rooms = [
+        r
+        for r in rooms
+        if (r.status or "available").lower() in ("available", "clean", "")
+    ]
+
+    if not check_in or not check_out:
+        return rooms
+
+    busy_ids = set()
+    try:
+        overlaps = Booking.query.filter(
+            Booking.status.in_(["pending", "confirmed", "checked_in", "booked"]),
+            Booking.check_in < check_out,
+            Booking.check_out > check_in,
+        ).all()
+        for b in overlaps:
+            if b.room_id:
+                busy_ids.add(b.room_id)
+    except Exception:
+        pass
+
+    return [r for r in rooms if r.id not in busy_ids]
