@@ -117,3 +117,30 @@ def notify_booking_status(booking, new_status: str) -> None:
     <p>Room: {booking.room_number or '—'} · Check-in: {booking.check_in} · Check-out: {booking.check_out}</p>
     """
     send_email(guest, f"Booking {new_status} — {ref}", brand_wrap(body, "Booking Update"), f"Booking {ref}: {new_status}")
+
+
+def notify_admin_booking(booking) -> None:
+    """Email hotel admin when a public booking is created."""
+    try:
+        s = _settings()
+        admin_email = (s.get("email") or "").strip()
+        if not admin_email:
+            return
+        ref = getattr(booking, "booking_ref", None) or getattr(booking, "id", "—")
+        guest = getattr(booking, "guest_name", None) or getattr(booking, "customer_name", None) or "Guest"
+        body = f"""
+        <p>New website booking received.</p>
+        <ul>
+          <li><strong>Ref:</strong> {ref}</li>
+          <li><strong>Guest:</strong> {guest}</li>
+          <li><strong>Email:</strong> {getattr(booking, 'guest_email', None) or getattr(booking, 'email', '') or '—'}</li>
+          <li><strong>Phone:</strong> {getattr(booking, 'guest_phone', None) or getattr(booking, 'phone', '') or '—'}</li>
+          <li><strong>Check-in:</strong> {getattr(booking, 'check_in', '')}</li>
+          <li><strong>Check-out:</strong> {getattr(booking, 'check_out', '')}</li>
+        </ul>
+        <p>Open HMS to manage this booking.</p>
+        """
+        html = brand_wrap(body, title="New booking alert")
+        send_email(admin_email, f"[Booking] {ref} — {guest}", html, text_fallback=f"New booking {ref} by {guest}")
+    except Exception as e:
+        log.warning("admin booking mail failed: %s", e)

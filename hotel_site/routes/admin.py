@@ -175,11 +175,23 @@ def settings():
         logo = _upload(request.files.get("logo_image"), "brand")
         if logo:
             _set_setting("logo_url", logo)
-            _set_setting("favicon_url", logo)
+            # Also copy to static/images/logo.png for admin sidebar default
             try:
                 import shutil
-                # logo path like /static/images/brand/xxx.png
                 rel = logo.split("/static/")[-1] if "/static/" in logo else logo.lstrip("/")
+                src_path = os.path.join(current_app.root_path, "static", rel)
+                if os.path.isfile(src_path):
+                    dest = os.path.join(current_app.root_path, "static", "images", "logo.png")
+                    os.makedirs(os.path.dirname(dest), exist_ok=True)
+                    shutil.copy2(src_path, dest)
+            except Exception as e:
+                current_app.logger.warning("Logo copy failed: %s", e)
+        fav = _upload(request.files.get("favicon_image"), "favicon")
+        if fav:
+            _set_setting("favicon_url", fav)
+            try:
+                import shutil
+                rel = fav.split("/static/")[-1] if "/static/" in fav else fav.lstrip("/")
                 src_path = os.path.join(current_app.root_path, "static", rel)
                 if os.path.isfile(src_path):
                     fav_dir = os.path.join(current_app.root_path, "static", "favicon")
@@ -189,6 +201,19 @@ def settings():
                     shutil.copy2(src_path, os.path.join(fav_dir, "favicon" + ext))
             except Exception as e:
                 current_app.logger.warning("Favicon copy failed: %s", e)
+        elif logo:
+            # no separate favicon — use logo
+            _set_setting("favicon_url", logo)
+            try:
+                import shutil
+                rel = logo.split("/static/")[-1] if "/static/" in logo else logo.lstrip("/")
+                src_path = os.path.join(current_app.root_path, "static", rel)
+                if os.path.isfile(src_path):
+                    fav_dir = os.path.join(current_app.root_path, "static", "favicon")
+                    os.makedirs(fav_dir, exist_ok=True)
+                    shutil.copy2(src_path, os.path.join(fav_dir, "favicon.ico"))
+            except Exception as e:
+                current_app.logger.warning("Favicon from logo failed: %s", e)
         sig = _upload(request.files.get("email_signature_image"), "brand")
         if sig:
             _set_setting("email_signature", sig)

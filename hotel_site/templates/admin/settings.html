@@ -27,13 +27,22 @@
   <fieldset>
     <legend>Logo (shows on all pages)</legend>
     <div class="form-group">
-      <label>Hotel logo image</label>
+      <label>Hotel logo (header / footer / emails)</label>
       <input type="file" name="logo_image" accept="image/*">
       {% if settings.logo_url %}
       <p class="muted">Current logo:</p>
       <img src="{{ settings.logo_url }}" alt="Logo" class="preview-img" style="max-height:80px;background:#fff;padding:6px;">
       {% endif %}
-      <p class="muted">Upload once — header, footer, favicon and emails use the same logo.</p>
+      <p class="muted">Used in website header, footer and emails.</p>
+    </div>
+    <div class="form-group">
+      <label>Favicon (browser tab icon)</label>
+      <input type="file" name="favicon_image" accept="image/*,.ico">
+      {% if settings.favicon_url %}
+      <p class="muted">Current favicon:</p>
+      <img src="{{ settings.favicon_url }}" alt="Favicon" class="preview-img" style="max-height:32px;background:#fff;padding:4px;">
+      {% endif %}
+      <p class="muted">Square PNG or ICO recommended. If empty, logo is used as favicon.</p>
     </div>
     <div class="form-group">
       <label>Email signature image (optional)</label>
