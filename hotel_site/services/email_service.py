@@ -107,52 +107,120 @@ def send_email(to_address: str, subject: str, html_body: str, text_fallback: str
 
 
 def notify_booking_received(booking) -> None:
+    """Guest: decorative booking-received email. Hotel: info@hotelgrand.com.np."""
     s = _settings()
-    hotel_email = s.get("email") or os.environ.get("HOTEL_EMAIL") or "info@hotelgrand.com.np"
-    guest = booking.guest_email_display or getattr(booking, "email", None) or ""
-    ref = booking.booking_ref or str(booking.id)
-    room = booking.room_number or ""
-    body = f"""
-    <p>Dear <strong>{booking.guest_name}</strong>,</p>
-    <p>We have received your booking request.</p>
-    <ul>
-      <li><strong>Reference:</strong> {ref}</li>
-      <li><strong>Room:</strong> {room}</li>
-      <li><strong>Check-in:</strong> {booking.check_in}</li>
-      <li><strong>Check-out:</strong> {booking.check_out}</li>
-      <li><strong>Guests:</strong> {booking.num_guests}</li>
-      <li><strong>Status:</strong> Pending confirmation</li>
-    </ul>
-    <p>Our team will review and confirm shortly. Thank you for choosing Hotel Grand Garden.</p>
+    hotel_email = (s.get("email") or os.environ.get("HOTEL_EMAIL") or "info@hotelgrand.com.np").strip()
+    guest = (
+        getattr(booking, "guest_email_display", None)
+        or getattr(booking, "guest_email", None)
+        or getattr(booking, "email", None)
+        or ""
+    )
+    guest = (guest or "").strip()
+    ref = getattr(booking, "booking_ref", None) or str(getattr(booking, "id", ""))
+    room = getattr(booking, "room_number", None) or getattr(booking, "room_type_name", None) or ""
+    name = getattr(booking, "guest_name", None) or "Guest"
+    phone = getattr(booking, "guest_phone", None) or getattr(booking, "phone", None) or ""
+    ci = getattr(booking, "check_in", "")
+    co = getattr(booking, "check_out", "")
+
+    guest_body = f"""
+    <p style="margin:0 0 12px">Dear <strong>{name}</strong>,</p>
+    <p style="margin:0 0 12px">Thank you for choosing <strong>Hotel Grand Garden, Urlabari</strong>. We have received your booking request.</p>
+    <table role="presentation" width="100%" style="border-collapse:collapse;margin:16px 0;background:#f7faf5;border-radius:12px">
+      <tr><td style="padding:10px 14px;color:#5a6a80;font-size:13px">Reference</td>
+          <td style="padding:10px 14px;text-align:right;font-weight:700;color:#0a1628">{ref}</td></tr>
+      <tr><td style="padding:10px 14px;color:#5a6a80;font-size:13px">Room</td>
+          <td style="padding:10px 14px;text-align:right;font-weight:600">{room or "—"}</td></tr>
+      <tr><td style="padding:10px 14px;color:#5a6a80;font-size:13px">Check-in</td>
+          <td style="padding:10px 14px;text-align:right;font-weight:600">{ci}</td></tr>
+      <tr><td style="padding:10px 14px;color:#5a6a80;font-size:13px">Check-out</td>
+          <td style="padding:10px 14px;text-align:right;font-weight:600">{co}</td></tr>
+    </table>
+    <p style="margin:0;font-size:14px;color:#5a6a80">Our team will confirm shortly. For help, write to <a href="mailto:info@hotelgrand.com.np" style="color:#2d8a4e">info@hotelgrand.com.np</a>.</p>
     """
-    html = brand_wrap(body, "Booking Received")
     if guest:
-        send_email(guest, f"Booking received — {ref}", html, f"Booking {ref} received.")
-    if hotel_email:
-        staff_body = body + f"<p>Guest phone: {booking.guest_phone_display or booking.phone}</p>"
-        send_email(hotel_email, f"New website booking — {ref}", brand_wrap(staff_body, "New Booking"), f"New booking {ref}")
+        ok = send_email(
+            guest,
+            f"Booking received — {ref} | Hotel Grand Garden",
+            brand_wrap(guest_body, "Booking Received"),
+            f"Booking {ref} received. Hotel Grand Garden Urlabari.",
+        )
+        log.info("guest booking mail to %s ok=%s", guest, ok)
+
+    # Always notify hotel
+    staff_body = f"""
+    <p style="margin:0 0 12px"><strong>New website booking</strong></p>
+    <table role="presentation" width="100%" style="border-collapse:collapse;margin:12px 0">
+      <tr><td style="padding:8px 0;color:#5a6a80">Ref</td><td style="text-align:right;font-weight:700">{ref}</td></tr>
+      <tr><td style="padding:8px 0;color:#5a6a80">Guest</td><td style="text-align:right;font-weight:600">{name}</td></tr>
+      <tr><td style="padding:8px 0;color:#5a6a80">Phone</td><td style="text-align:right">{phone or "—"}</td></tr>
+      <tr><td style="padding:8px 0;color:#5a6a80">Email</td><td style="text-align:right">{guest or "—"}</td></tr>
+      <tr><td style="padding:8px 0;color:#5a6a80">Room</td><td style="text-align:right">{room or "—"}</td></tr>
+      <tr><td style="padding:8px 0;color:#5a6a80">Stay</td><td style="text-align:right">{ci} → {co}</td></tr>
+    </table>
+    <p style="margin:0;font-size:13px;color:#5a6a80">Open HMS → Bookings to confirm or cancel.</p>
+    """
+    ok2 = send_email(
+        hotel_email,
+        f"[New Booking] {ref} — {name}",
+        brand_wrap(staff_body, "New Booking Alert"),
+        f"New booking {ref} by {name}",
+    )
+    log.info("hotel booking mail to %s ok=%s", hotel_email, ok2)
 
 
 def notify_booking_status(booking, new_status: str) -> None:
-    guest = booking.guest_email_display or getattr(booking, "email", None) or ""
+    """Decorative confirmed / cancelled email to guest."""
+    guest = (
+        getattr(booking, "guest_email_display", None)
+        or getattr(booking, "guest_email", None)
+        or getattr(booking, "email", None)
+        or ""
+    )
+    guest = (guest or "").strip()
     if not guest:
         return
-    ref = booking.booking_ref or str(booking.id)
+    ref = getattr(booking, "booking_ref", None) or str(getattr(booking, "id", ""))
+    name = getattr(booking, "guest_name", None) or "Guest"
+    room = getattr(booking, "room_number", None) or ""
+    ci = getattr(booking, "check_in", "")
+    co = getattr(booking, "check_out", "")
+    status_l = (new_status or "").replace("_", " ").title()
+    color = "#2d8a4e" if "confirm" in (new_status or "").lower() else ("#e6392b" if "cancel" in (new_status or "").lower() else "#1a4b8c")
     body = f"""
-    <p>Dear <strong>{booking.guest_name}</strong>,</p>
-    <p>Your booking <strong>{ref}</strong> status is now: <strong>{new_status.replace('_',' ').title()}</strong>.</p>
-    <p>Room: {booking.room_number or '—'} · Check-in: {booking.check_in} · Check-out: {booking.check_out}</p>
+    <p style="margin:0 0 12px">Dear <strong>{name}</strong>,</p>
+    <p style="margin:0 0 16px">Your booking status is now:</p>
+    <div style="text-align:center;margin:0 0 18px">
+      <span style="display:inline-block;padding:10px 22px;border-radius:999px;background:{color};color:#fff;font-weight:700;letter-spacing:0.04em">{status_l}</span>
+    </div>
+    <table role="presentation" width="100%" style="border-collapse:collapse;background:#f7faf5;border-radius:12px">
+      <tr><td style="padding:10px 14px;color:#5a6a80;font-size:13px">Reference</td>
+          <td style="padding:10px 14px;text-align:right;font-weight:700">{ref}</td></tr>
+      <tr><td style="padding:10px 14px;color:#5a6a80;font-size:13px">Room</td>
+          <td style="padding:10px 14px;text-align:right;font-weight:600">{room or "—"}</td></tr>
+      <tr><td style="padding:10px 14px;color:#5a6a80;font-size:13px">Check-in</td>
+          <td style="padding:10px 14px;text-align:right">{ci}</td></tr>
+      <tr><td style="padding:10px 14px;color:#5a6a80;font-size:13px">Check-out</td>
+          <td style="padding:10px 14px;text-align:right">{co}</td></tr>
+    </table>
+    <p style="margin:16px 0 0;font-size:13px;color:#5a6a80">Questions? <a href="mailto:info@hotelgrand.com.np" style="color:#2d8a4e">info@hotelgrand.com.np</a></p>
     """
-    send_email(guest, f"Booking {new_status} — {ref}", brand_wrap(body, "Booking Update"), f"Booking {ref}: {new_status}")
+    send_email(
+        guest,
+        f"Booking {status_l} — {ref} | Hotel Grand Garden",
+        brand_wrap(body, f"Booking {status_l}"),
+        f"Booking {ref}: {status_l}",
+    )
 
 
 def notify_admin_booking(booking) -> None:
     """Email hotel admin when a public booking is created."""
     try:
         s = _settings()
-        admin_email = (s.get("email") or os.environ.get("HOTEL_EMAIL") or "info@hotelgrand.com.np").strip()
-        if not admin_email:
-            return
+        admin_email = (s.get("email") or os.environ.get("HOTEL_EMAIL") or "info@hotelgrand.com.np").strip() or "info@hotelgrand.com.np"
+        # Always also CC primary hotel inbox
+        targets = {admin_email, "info@hotelgrand.com.np"}
         ref = getattr(booking, "booking_ref", None) or getattr(booking, "id", "—")
         guest = getattr(booking, "guest_name", None) or getattr(booking, "customer_name", None) or "Guest"
         body = f"""
@@ -168,6 +236,7 @@ def notify_admin_booking(booking) -> None:
         <p>Open HMS to manage this booking.</p>
         """
         html = brand_wrap(body, title="New booking alert")
-        send_email(admin_email, f"[Booking] {ref} — {guest}", html, text_fallback=f"New booking {ref} by {guest}")
+        for _to in targets:
+            send_email(_to, f"[Booking] {ref} — {guest}", html, text_fallback=f"New booking {ref} by {guest}")
     except Exception as e:
         log.warning("admin booking mail failed: %s", e)
