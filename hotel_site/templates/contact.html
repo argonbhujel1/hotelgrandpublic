@@ -16,7 +16,7 @@
       <p>Family Restaurant & Lodge</p>
       <p>Urlabari-05, Morang, Nepal</p>
       <p><a href="tel:021-541955" class="btn btn-outline btn-sm">Call 021-541955</a></p>
-      <p><a href="mailto:hotelgrandnp@outlook.com" class="btn btn-outline btn-sm">Email Us</a></p>
+      <p><a href="mailto:{{ hotel.email if hotel and hotel.email else 'info@hotelgrand.com.np' }}" class="btn btn-outline btn-sm">Email Us</a></p>
       <button type="button" class="btn btn-gold btn-sm" id="btn-get-direction-contact">Get Direction</button>
       <div class="policies-box">
         <h3>Stay Policies</h3>

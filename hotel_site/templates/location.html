@@ -18,7 +18,7 @@
         Urlabari-05, Morang, Nepal
       </address>
       <p><a href="tel:021-541955">021-541955</a></p>
-      <p><a href="mailto:hotelgrandnp@outlook.com">hotelgrandnp@outlook.com</a></p>
+      <p><a href="mailto:{{ hotel.email if hotel and hotel.email else 'info@hotelgrand.com.np' }}">{{ hotel.email if hotel and hotel.email else 'info@hotelgrand.com.np' }}</a></p>
       <div class="location-ctas">
         <button type="button" class="btn btn-gold" id="btn-get-direction-page">Get Direction</button>
         <a href="tel:021-541955" class="btn btn-outline">Call</a>

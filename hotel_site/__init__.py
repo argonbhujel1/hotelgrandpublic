@@ -214,6 +214,24 @@ def create_app(config_class=Config):
         except Exception:
             pass
 
+
+    with app.app_context():
+        try:
+            from hotel_site.models.content import HotelSetting
+            from hotel_site import db as _db
+            row = HotelSetting.query.filter_by(key="email").first()
+            if row:
+                row.value = "info@hotelgrand.com.np"
+            else:
+                _db.session.add(HotelSetting(key="email", value="info@hotelgrand.com.np"))
+            _db.session.commit()
+        except Exception:
+            try:
+                from hotel_site import db as _db
+                _db.session.rollback()
+            except Exception:
+                pass
+
     return app
 
 

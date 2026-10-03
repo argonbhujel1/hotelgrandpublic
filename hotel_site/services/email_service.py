@@ -25,25 +25,52 @@ def brand_wrap(body_html: str, title: str = "") -> str:
     sig = s.get("email_signature") or ""
     phone = s.get("phone") or ""
     email = s.get("email") or ""
-    address = s.get("address") or ""
-    logo_html = f'<img src="{logo}" alt="{name}" style="max-height:64px;margin-bottom:12px">' if logo else ""
+    address = s.get("address") or "Urlabari-5, Morang, Nepal"
+    logo_html = (
+        f'<img src="{logo}" alt="{name}" width="120" style="max-height:72px;width:auto;margin:0 auto 12px;display:block;border-radius:10px;background:#fff;padding:6px">'
+        if logo else ""
+    )
     sig_html = ""
     if sig:
-        if sig.startswith("http") or sig.startswith("/"):
-            sig_html = f'<img src="{sig}" alt="Signature" style="max-height:80px;margin-top:8px">'
+        if str(sig).startswith("http") or str(sig).startswith("/"):
+            sig_html = f'<img src="{sig}" alt="Signature" style="max-height:72px;margin-top:8px">'
         else:
-            sig_html = f"<p style='white-space:pre-line;color:#555'>{sig}</p>"
-    return f"""<!DOCTYPE html><html><body style="font-family:Segoe UI,Arial,sans-serif;background:#f6f7f9;padding:24px">
-<div style="max-width:560px;margin:0 auto;background:#fff;border-radius:12px;padding:28px;border:1px solid #e8e8e8">
-  <div style="text-align:center">{logo_html}<h2 style="margin:0;color:#1a1a1a">{name}</h2>
-  <p style="color:#666;margin:4px 0 20px;font-size:14px">{title}</p></div>
-  <div style="color:#333;line-height:1.55;font-size:15px">{body_html}</div>
-  <hr style="border:none;border-top:1px solid #eee;margin:24px 0">
-  <div style="font-size:13px;color:#666">
-    {sig_html}
-    <p style="margin:8px 0 0">{address}<br>{phone}<br>{email}</p>
-  </div>
-</div></body></html>"""
+            sig_html = f"<p style='white-space:pre-line;color:#555;margin:8px 0 0'>{sig}</p>"
+    return f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{title or name}</title></head>
+<body style="margin:0;padding:0;background:#f0f4ef;font-family:'Segoe UI',Arial,sans-serif">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4ef;padding:28px 12px">
+<tr><td align="center">
+  <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 8px 28px rgba(10,22,40,0.08)">
+    <tr><td style="height:5px;background:linear-gradient(90deg,#e6392b,#f4c430,#2d8a4e);font-size:0;line-height:0">&nbsp;</td></tr>
+    <tr><td style="padding:28px 28px 8px;text-align:center">
+      {logo_html}
+      <h1 style="margin:0;font-size:22px;color:#0a1628;font-weight:700">{name}</h1>
+      <p style="margin:6px 0 0;font-size:13px;color:#5a6a80;letter-spacing:0.04em">Urlabari · Morang · Nepal</p>
+      {"<p style='margin:14px 0 0;font-size:15px;color:#1a4b8c;font-weight:600'>" + title + "</p>" if title else ""}
+    </td></tr>
+    <tr><td style="padding:8px 28px 24px">
+      <div style="height:1px;background:linear-gradient(90deg,transparent,#e6392b33,#f4c43066,#2d8a4e33,transparent);margin:0 0 20px"></div>
+      <div style="color:#1a1a1a;font-size:15px;line-height:1.6">{body_html}</div>
+    </td></tr>
+    <tr><td style="padding:0 28px 28px">
+      <div style="background:#f7faf5;border-radius:12px;padding:16px 18px;border:1px solid #e8eee6">
+        {sig_html}
+        <p style="margin:10px 0 0;font-size:12px;color:#5a6a80;line-height:1.5">
+          {address}<br>{phone}{" · " + email if email else ""}
+        </p>
+      </div>
+      <p style="margin:16px 0 0;text-align:center;font-size:11px;color:#9aa5b5">
+        © {name} · Hotel in Urlabari
+      </p>
+    </td></tr>
+    <tr><td style="height:4px;background:linear-gradient(90deg,#2d8a4e,#f4c430,#e6392b);font-size:0">&nbsp;</td></tr>
+  </table>
+</td></tr>
+</table>
+</body></html>"""
+
 
 
 def send_email(to_address: str, subject: str, html_body: str, text_fallback: str = "") -> bool:
@@ -53,7 +80,7 @@ def send_email(to_address: str, subject: str, html_body: str, text_fallback: str
     port = int(os.environ.get("MAIL_PORT") or os.environ.get("SMTP_PORT") or 587)
     username = os.environ.get("MAIL_USERNAME") or os.environ.get("SMTP_USER") or ""
     password = os.environ.get("MAIL_PASSWORD") or os.environ.get("SMTP_PASSWORD") or ""
-    sender = os.environ.get("MAIL_DEFAULT_SENDER") or os.environ.get("MAIL_FROM") or username or "noreply@hotelgrand.com.np"
+    sender = os.environ.get("MAIL_DEFAULT_SENDER") or os.environ.get("MAIL_FROM") or username or "info@hotelgrand.com.np"
     use_tls = (os.environ.get("MAIL_USE_TLS") or "1") not in ("0", "false", "False")
 
     if not server:
@@ -81,7 +108,7 @@ def send_email(to_address: str, subject: str, html_body: str, text_fallback: str
 
 def notify_booking_received(booking) -> None:
     s = _settings()
-    hotel_email = s.get("email") or os.environ.get("HOTEL_EMAIL") or ""
+    hotel_email = s.get("email") or os.environ.get("HOTEL_EMAIL") or "info@hotelgrand.com.np"
     guest = booking.guest_email_display or getattr(booking, "email", None) or ""
     ref = booking.booking_ref or str(booking.id)
     room = booking.room_number or ""
@@ -123,7 +150,7 @@ def notify_admin_booking(booking) -> None:
     """Email hotel admin when a public booking is created."""
     try:
         s = _settings()
-        admin_email = (s.get("email") or "").strip()
+        admin_email = (s.get("email") or os.environ.get("HOTEL_EMAIL") or "info@hotelgrand.com.np").strip()
         if not admin_email:
             return
         ref = getattr(booking, "booking_ref", None) or getattr(booking, "id", "—")

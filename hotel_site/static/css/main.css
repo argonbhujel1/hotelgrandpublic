@@ -42,7 +42,12 @@ body {
   font-family: var(--font-body);
   font-weight: 400;
   color: var(--cream);
-  background: var(--primary);
+  background:
+    radial-gradient(ellipse 120% 80% at 0% 0%, rgba(230, 57, 43, 0.06), transparent 50%),
+    radial-gradient(ellipse 100% 60% at 100% 10%, rgba(244, 196, 48, 0.08), transparent 45%),
+    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(45, 138, 78, 0.06), transparent 50%),
+    linear-gradient(180deg, #ffffff 0%, #f9faf7 40%, #ffffff 100%);
+  background-attachment: fixed;
   line-height: 1.6;
   min-height: 100vh;
   overflow-x: hidden;
@@ -398,7 +403,9 @@ ul { list-style: none; }
 .breadcrumb span { margin: 0 0.35rem; }
 
 /* Sections */
+.section-soft { background: rgba(255,255,255,0.65); }
 .section {
+
   padding: 4rem 0;
 }
 .section-header {
@@ -1410,46 +1417,6 @@ main { padding-top: 0; }
   line-height: 1.35;
 }
 
-/* Home gallery marquee — continuous moving strip */
-.home-gallery {
-  overflow: hidden;
-  padding-bottom: 2.5rem;
-}
-.home-gallery .section-header { margin-bottom: 1.25rem; }
-.gallery-marquee {
-  width: 100%;
-  overflow: hidden;
-  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
-}
-.gallery-track {
-  display: flex;
-  gap: 1rem;
-  width: max-content;
-  animation: gallery-scroll 40s linear infinite;
-}
-.gallery-track:hover { animation-play-state: paused; }
-.gallery-item {
-  flex: 0 0 auto;
-  width: min(280px, 70vw);
-  aspect-ratio: 4/3;
-  border-radius: var(--radius);
-  overflow: hidden;
-  border: 1px solid var(--border);
-  background: #e2e8f0;
-  box-shadow: var(--shadow);
-}
-.gallery-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-@keyframes gallery-scroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
 /* About page gallery grid */
 .about-gallery-section { padding-top: 0; }
 .about-gallery-grid {
@@ -1523,7 +1490,10 @@ main { padding-top: 0; }
   overflow: hidden;
   padding: 3.5rem 0 4rem;
   background:
-    linear-gradient(180deg, #fff 0%, #f7faf5 40%, #fff 100%);
+    radial-gradient(ellipse at 20% 0%, rgba(230,57,43,0.07), transparent 55%),
+    radial-gradient(ellipse at 80% 100%, rgba(45,138,78,0.08), transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(244,196,48,0.06), transparent 60%),
+    linear-gradient(180deg, #fff 0%, #f8faf6 50%, #fff 100%);
   position: relative;
 }
 .home-gallery::before {
@@ -1566,11 +1536,11 @@ main { padding-top: 0; }
   display: flex;
   gap: 1.15rem;
   width: max-content;
-  animation: gallery-scroll 38s linear infinite;
+  animation: gallery-scroll 95s linear infinite;
   will-change: transform;
 }
 .gallery-track-reverse {
-  animation: gallery-scroll-rev 44s linear infinite;
+  animation: gallery-scroll-rev 110s linear infinite;
 }
 .gallery-track:hover,
 .gallery-track-reverse:hover {
@@ -1588,9 +1558,9 @@ main { padding-top: 0; }
   box-shadow: 0 8px 24px rgba(10, 22, 40, 0.1);
   border: 2px solid transparent;
   background-clip: padding-box;
-  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow 0.45s ease,
-              border-color 0.35s ease;
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.4s ease;
 }
 /* Colored frames cycling red / yellow / green */
 .gallery-item:nth-child(3n+1) { border-color: rgba(230, 57, 43, 0.35); }
@@ -1608,7 +1578,7 @@ main { padding-top: 0; }
   z-index: 1;
 }
 .gallery-item:hover {
-  transform: translateY(-8px) scale(1.05);
+  transform: translateY(-10px) scale(1.06);
   box-shadow: 0 20px 44px rgba(10, 22, 40, 0.22);
   z-index: 3;
 }
@@ -1626,9 +1596,9 @@ main { padding-top: 0; }
   object-fit: cover;
   object-position: center;
   display: block;
-  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.gallery-item:hover img { transform: scale(1.12); }
+.gallery-item:hover img { transform: scale(1.14); }
 
 .gallery-item .gallery-cap {
   position: absolute;

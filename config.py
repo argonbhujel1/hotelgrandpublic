@@ -50,7 +50,7 @@ class Config:
     HOTEL_TAGLINE = os.environ.get("HOTEL_TAGLINE", "Family Restaurant & Lodge")
     HOTEL_ADDRESS = os.environ.get("HOTEL_ADDRESS", "Urlabari-05, Morang, Nepal")
     HOTEL_PHONE = os.environ.get("HOTEL_PHONE", "021-541955")
-    HOTEL_EMAIL = os.environ.get("HOTEL_EMAIL", "hotelgrandnp@outlook.com")
+    HOTEL_EMAIL = os.environ.get("HOTEL_EMAIL", "info@hotelgrand.com.np")
     CHECK_IN = "12:00 PM"
     CHECK_OUT = "11:00 AM"
     WEEKEND_DISCOUNT = 200

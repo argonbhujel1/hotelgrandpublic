@@ -41,7 +41,7 @@
       "addressCountry": "NP"
     },
     "telephone": "+977-021-541955",
-    "email": "hotelgrandnp@outlook.com",
+    "email": "info@hotelgrand.com.np",
     "url": "https://hotelgrand.com.np",
     "geo": {
       "@type": "GeoCoordinates",
@@ -138,7 +138,7 @@
         <p>{{ hotel.tagline if hotel else 'Family Restaurant & Lodge' }}</p>
         <p class="footer-address">Urlabari-05, Morang, Nepal</p>
         <p><a href="tel:021-541955">021-541955</a></p>
-        <p><a href="mailto:hotelgrandnp@outlook.com">hotelgrandnp@outlook.com</a></p>
+        <p><a href="mailto:{{ hotel.email if hotel and hotel.email else 'info@hotelgrand.com.np' }}">{{ hotel.email if hotel and hotel.email else 'info@hotelgrand.com.np' }}</a></p>
       </div>
       <div class="footer-links">
         <h4>Quick Links</h4>

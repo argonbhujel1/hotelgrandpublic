@@ -22,7 +22,7 @@ def _seed_settings():
         ("tagline", "Family Restaurant & Lodge"),
         ("address", "Urlabari-05, Morang, Nepal"),
         ("phone", "9816374804"),
-        ("email", "hotelgrandnp@outlook.com"),
+        ("email", "info@hotelgrand.com.np"),
         ("check_in", "12:00 PM"),
         ("check_out", "11:00 AM"),
         ("latitude", "26.6643"),
