@@ -208,3 +208,16 @@ h2 { font-size: 1.15rem; margin: 1.5rem 0 0.75rem; }
   border-radius: 4px;
   vertical-align: middle;
 }
+
+.btn-danger {
+  background: #c53030;
+  color: #fff !important;
+  border: 0;
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-block;
+}
+.btn-danger:hover { background: #9b2c2c; }

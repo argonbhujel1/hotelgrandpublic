@@ -631,6 +631,27 @@ def menu_category():
     return redirect(url_for("admin.menu"))
 
 
+
+@admin_bp.route("/menu/category/<int:cat_id>/delete", methods=["POST"])
+@admin_required
+def menu_category_delete(cat_id):
+    """Delete a menu category AND all food items in that class."""
+    cat = MenuCategory.query.get_or_404(cat_id)
+    name = cat.name
+    try:
+        items = MenuItem.query.filter_by(category_id=cat.id).all()
+        n = len(items)
+        for it in items:
+            db.session.delete(it)
+        db.session.delete(cat)
+        db.session.commit()
+        flash(f"Category '{name}' deleted with {n} item(s).", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Could not delete category: {e}", "error")
+    return redirect(url_for("admin.menu"))
+
+
 @admin_bp.route("/menu/item", methods=["POST"])
 @admin_required
 def menu_item():
