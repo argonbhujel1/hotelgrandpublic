@@ -2,95 +2,137 @@
 {% block title %}Menu{% endblock %}
 {% block content %}
 <h1>Menu</h1>
+<p style="color:var(--muted);margin-bottom:1rem">Categories are fixed for restaurant &amp; bar. Add multiple items at once; photos only when editing an item.</p>
 
-<form method="post" action="{{ url_for('admin.menu_category') }}" class="admin-form" style="margin-bottom:1.5rem;max-width:480px">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <div class="form-group">
-    <label>New category</label>
-    <input name="name" placeholder="e.g. Breakfast, Drinks" required>
-  </div>
-  <button type="submit" class="btn-primary">Add category</button>
-</form>
-
-{% for cat in categories %}
-<section class="menu-admin-cat">
-  <h2>{{ cat.name }}</h2>
-
-  <form method="post" action="{{ url_for('admin.menu_item') }}" enctype="multipart/form-data" class="admin-form" style="margin-bottom:1rem">
+{% if categories %}
+<div class="admin-card" style="margin-bottom:1.5rem">
+  <h2 style="font-size:1.1rem;margin-bottom:.75rem">Bulk add items</h2>
+  <form method="post" action="{{ url_for('admin.menu_item_bulk') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="hidden" name="category_id" value="{{ cat.id }}">
     <div class="form-group">
-      <label>Item name *</label>
-      <input name="name" required>
+      <label>Category (Item class) *</label>
+      <select name="category_id" required>
+        {% for c in categories %}
+        <option value="{{ c.id }}">{{ c.sort_order }}. {{ c.name }}</option>
+        {% endfor %}
+      </select>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Price (Rs.) *</label>
-        <input name="price" type="number" step="1" required>
-      </div>
-      <div class="form-group">
-        <label>Photo</label>
-        <input type="file" name="image" accept="image/*">
-      </div>
+    <div class="table-wrap" style="margin:.75rem 0">
+      <table class="data" id="bulkRows">
+        <thead>
+          <tr>
+            <th>Item name *</th>
+            <th>Price (Rs.) *</th>
+            <th>Prep time (min)</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for _ in range(5) %}
+          <tr class="bulk-row">
+            <td><input name="names[]" placeholder="Item name" style="width:100%"></td>
+            <td><input name="prices[]" type="number" step="1" min="0" placeholder="0" style="width:100px"></td>
+            <td><input name="prep_times[]" type="number" step="1" min="0" placeholder="e.g. 15" style="width:90px"></td>
+            <td><button type="button" class="btn-link" onclick="this.closest('tr').remove()">Remove</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-    <div class="form-group">
-      <label>Description</label>
-      <input name="description" placeholder="Short description">
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem">
+      <button type="button" class="btn-link" onclick="addBulkRow()">+ Add row</button>
+      <button type="submit" class="btn-primary">Save all items</button>
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:1rem;margin:0.75rem 0">
-      <label class="check"><input type="checkbox" name="show_on_website" value="1" checked> Website</label>
-      <label class="check"><input type="checkbox" name="show_on_qr" value="1" checked> QR</label>
-      <label class="check"><input type="checkbox" name="is_available" value="1" checked> Available</label>
-    </div>
-    <button type="submit" class="btn-primary">Add item to {{ cat.name }}</button>
+    <p style="font-size:.85rem;color:var(--muted)">Empty name rows are skipped. Image can be added later from Edit.</p>
   </form>
+</div>
+{% endif %}
 
-  <table class="admin-table">
-    <thead>
-      <tr><th></th><th>Name</th><th>Price</th><th>Web</th><th>QR</th><th>Avail</th><th></th></tr>
-    </thead>
-    <tbody>
-    {% for it in (cat._items_list if cat._items_list is defined else cat.items) %}
-    <tr>
-      <td>{% if it.image_url %}<img src="{{ it.image_url }}" class="menu-thumb" alt="">{% else %}—{% endif %}</td>
-      <td>{{ it.name }}</td>
-      <td>Rs. {{ '{:,.0f}'.format(it.price) }}</td>
-      <td>
-        <form method="post" action="{{ url_for('admin.menu_item_toggle', item_id=it.id) }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="hidden" name="field" value="show_on_website">
-          <button type="submit" class="badge">{{ 'ON' if it.show_on_website else 'OFF' }}</button>
-        </form>
-      </td>
-      <td>
-        <form method="post" action="{{ url_for('admin.menu_item_toggle', item_id=it.id) }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="hidden" name="field" value="show_on_qr">
-          <button type="submit" class="badge">{{ 'ON' if it.show_on_qr else 'OFF' }}</button>
-        </form>
-      </td>
-      <td>
-        <form method="post" action="{{ url_for('admin.menu_item_toggle', item_id=it.id) }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="hidden" name="field" value="is_available">
-          <button type="submit" class="badge">{{ 'ON' if it.is_available else 'OFF' }}</button>
-        </form>
-      </td>
-      <td class="actions">
-        <a href="{{ url_for('admin.menu_item_edit', item_id=it.id) }}">Edit</a>
-        <form method="post" action="{{ url_for('admin.menu_item_delete', item_id=it.id) }}" onsubmit="return confirm('Delete?')" style="display:inline">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="link-danger">Delete</button>
-        </form>
-      </td>
-    </tr>
-    {% else %}
-    <tr><td colspan="7">No items in this category yet.</td></tr>
-    {% endfor %}
-    </tbody>
-  </table>
-</section>
+{% for c in categories %}
+<div class="admin-card" style="margin-bottom:1rem">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+    <h2 style="font-size:1.05rem;margin:0">{{ c.sort_order }}. {{ c.name }}</h2>
+    <span style="color:var(--muted);font-size:.85rem">{{ c._items_list|length }} items</span>
+  </div>
+  {% if c._items_list %}
+  <div class="table-wrap" style="margin-top:.75rem">
+    <table class="data">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Name</th>
+          <th>Price</th>
+          <th>Prep</th>
+          <th>Web</th>
+          <th>QR</th>
+          <th>Avail</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in c._items_list %}
+        <tr>
+          <td>
+            {% if item.image_url %}
+            <img src="{{ item.image_url }}" alt="" style="width:40px;height:40px;object-fit:cover;border-radius:6px">
+            {% else %}
+            <span style="color:var(--muted);font-size:.8rem">No photo</span>
+            {% endif %}
+          </td>
+          <td><strong>{{ item.name }}</strong></td>
+          <td>Rs. {{ item.price }}</td>
+          <td>{% if item.prep_time_minutes %}{{ item.prep_time_minutes }} min{% else %}—{% endif %}</td>
+          <td>
+            <form method="post" action="{{ url_for('admin.menu_item_toggle', item_id=item.id) }}" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="field" value="show_on_website">
+              <button type="submit" class="btn-link">{{ 'Yes' if item.show_on_website else 'No' }}</button>
+            </form>
+          </td>
+          <td>
+            <form method="post" action="{{ url_for('admin.menu_item_toggle', item_id=item.id) }}" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="field" value="show_on_qr">
+              <button type="submit" class="btn-link">{{ 'Yes' if item.show_on_qr else 'No' }}</button>
+            </form>
+          </td>
+          <td>
+            <form method="post" action="{{ url_for('admin.menu_item_toggle', item_id=item.id) }}" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="field" value="is_available">
+              <button type="submit" class="btn-link">{{ 'Yes' if item.is_available else 'No' }}</button>
+            </form>
+          </td>
+          <td style="white-space:nowrap">
+            <a href="{{ url_for('admin.menu_item_edit', item_id=item.id) }}" class="btn-link">Edit / Photo</a>
+            <form method="post" action="{{ url_for('admin.menu_item_delete', item_id=item.id) }}" style="display:inline" onsubmit="return confirm('Delete this item?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn-link" style="color:#c00">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p style="color:var(--muted);margin-top:.5rem">No items in this class yet.</p>
+  {% endif %}
+</div>
 {% else %}
-<p class="muted">No categories yet. Add one above.</p>
+<p>No categories yet. They will be created on next deploy / seed.</p>
 {% endfor %}
+
+<script>
+function addBulkRow() {
+  var tbody = document.querySelector('#bulkRows tbody');
+  var tr = document.createElement('tr');
+  tr.className = 'bulk-row';
+  tr.innerHTML = '<td><input name="names[]" placeholder="Item name" style="width:100%"></td>' +
+    '<td><input name="prices[]" type="number" step="1" min="0" placeholder="0" style="width:100px"></td>' +
+    '<td><input name="prep_times[]" type="number" step="1" min="0" placeholder="e.g. 15" style="width:90px"></td>' +
+    '<td><button type="button" class="btn-link" onclick="this.closest(\'tr\').remove()">Remove</button></td>';
+  tbody.appendChild(tr);
+}
+</script>
 {% endblock %}

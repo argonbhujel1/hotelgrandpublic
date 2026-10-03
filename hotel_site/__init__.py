@@ -249,6 +249,7 @@ def _ensure_public_schema():
         "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE",
         "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS is_available BOOLEAN DEFAULT TRUE",
         "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0",
+        "ALTER TABLE menu_items ADD COLUMN IF NOT EXISTS prep_time_minutes INTEGER",
         "ALTER TABLE room_types ADD COLUMN IF NOT EXISTS slug VARCHAR(140)",
         "ALTER TABLE room_types ADD COLUMN IF NOT EXISTS is_enabled BOOLEAN DEFAULT TRUE",
         "ALTER TABLE room_types ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0",

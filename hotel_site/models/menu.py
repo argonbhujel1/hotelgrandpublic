@@ -36,6 +36,7 @@ class MenuItem(db.Model):
     show_on_website = db.Column(db.Boolean, default=True)
     show_on_qr = db.Column(db.Boolean, default=True)
     sort_order = db.Column(db.Integer, default=0)
+    prep_time_minutes = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, default=npt_now_naive)
     updated_at = db.Column(db.DateTime, default=npt_now_naive, onupdate=npt_now_naive)
 

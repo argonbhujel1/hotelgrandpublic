@@ -551,12 +551,49 @@ def booking_status(bid):
 
 # ── Menu ──────────────────────────────────────────────
 
+
+DEFAULT_MENU_CATEGORIES = [
+    "Starters & Snacks", "Momo", "Chowmein & Noodles", "Rice & Biryani",
+    "Nepali Khana", "Soup", "Chicken", "Mutton & Buff", "Vegetarian",
+    "Continental", "Indian", "Breakfast", "Pasta",
+    "Tea & Coffee", "Cold Drinks", "Fresh Juice & Mocktails", "Bar", "Cigarette",
+]
+
+
+def _ensure_menu_categories():
+    """Create fixed restaurant/bar categories if missing (shared DB safe)."""
+    existing = {c.name.strip().lower(): c for c in MenuCategory.query.all()}
+    changed = False
+    for i, name in enumerate(DEFAULT_MENU_CATEGORIES, 1):
+        key = name.lower()
+        if key not in existing:
+            c = MenuCategory(name=name, slug=name.lower().replace(" ", "-").replace("&", "and"), sort_order=i, is_active=True)
+            db.session.add(c)
+            changed = True
+        else:
+            c = existing[key]
+            if c.sort_order != i:
+                c.sort_order = i
+                changed = True
+            if hasattr(c, "is_active") and not c.is_active:
+                c.is_active = True
+                changed = True
+    if changed:
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
 @admin_bp.route("/menu")
 @admin_required
 def menu():
     try:
         from hotel_site import _ensure_public_schema
         _ensure_public_schema()
+    except Exception:
+        pass
+    try:
+        _ensure_menu_categories()
     except Exception:
         pass
 
@@ -597,26 +634,79 @@ def menu_category():
 @admin_bp.route("/menu/item", methods=["POST"])
 @admin_required
 def menu_item():
-    cat_id = int(request.form.get("category_id", 0))
-    name = request.form.get("name", "").strip()
-    price = request.form.get("price", 0)
-    if name and cat_id:
+    """Legacy single-item add — still supported."""
+    cat_id = int(request.form.get("category_id", 0) or 0)
+    name = (request.form.get("name") or "").strip()
+    if cat_id and name:
+        try:
+            price = float(request.form.get("price") or 0)
+        except (TypeError, ValueError):
+            price = 0
+        prep = request.form.get("prep_time_minutes")
+        try:
+            prep = int(prep) if prep not in (None, "") else None
+        except (TypeError, ValueError):
+            prep = None
         item = MenuItem(
             category_id=cat_id,
             name=name,
-            description=request.form.get("description", "").strip(),
-            price=price or 0,
-            show_on_website=bool(request.form.get("show_on_website")),
-            show_on_qr=bool(request.form.get("show_on_qr")),
-            is_available=bool(request.form.get("is_available", True)),
-            is_orderable=True,
+            description=(request.form.get("description") or "").strip() or None,
+            price=price,
+            prep_time_minutes=prep,
+            is_available=True,
+            show_on_website=True,
+            show_on_qr=True,
+            is_active=True,
         )
-        img = _upload(request.files.get("image"), "menu")
-        if img:
-            item.image_url = img
         db.session.add(item)
         db.session.commit()
         flash("Menu item added.", "success")
+    return redirect(url_for("admin.menu"))
+
+
+@admin_bp.route("/menu/item/bulk", methods=["POST"])
+@admin_required
+def menu_item_bulk():
+    """Add multiple items at once (name, price, prep time). No image on bulk."""
+    cat_id = int(request.form.get("category_id", 0) or 0)
+    names = request.form.getlist("names[]") or request.form.getlist("names")
+    prices = request.form.getlist("prices[]") or request.form.getlist("prices")
+    preps = request.form.getlist("prep_times[]") or request.form.getlist("prep_times")
+    if not cat_id:
+        flash("Select a category.", "error")
+        return redirect(url_for("admin.menu"))
+    added = 0
+    for i, name in enumerate(names):
+        name = (name or "").strip()
+        if not name:
+            continue
+        try:
+            price = float(prices[i]) if i < len(prices) and prices[i] not in (None, "") else 0
+        except (TypeError, ValueError, IndexError):
+            price = 0
+        prep = None
+        try:
+            if i < len(preps) and preps[i] not in (None, ""):
+                prep = int(preps[i])
+        except (TypeError, ValueError, IndexError):
+            prep = None
+        item = MenuItem(
+            category_id=cat_id,
+            name=name,
+            price=price,
+            prep_time_minutes=prep,
+            is_available=True,
+            show_on_website=True,
+            show_on_qr=True,
+            is_active=True,
+        )
+        db.session.add(item)
+        added += 1
+    if added:
+        db.session.commit()
+        flash(f"{added} menu item(s) added. Add photos from Edit if needed.", "success")
+    else:
+        flash("No items to add (empty names).", "error")
     return redirect(url_for("admin.menu"))
 
 
@@ -751,6 +841,11 @@ def menu_item_edit(item_id):
         item.show_on_website = bool(request.form.get("show_on_website"))
         item.show_on_qr = bool(request.form.get("show_on_qr"))
         item.is_available = bool(request.form.get("is_available"))
+        try:
+            pt = request.form.get("prep_time_minutes")
+            item.prep_time_minutes = int(pt) if pt not in (None, "") else None
+        except (TypeError, ValueError):
+            pass
         img = _upload(request.files.get("image"), "menu")
         if img:
             item.image_url = img
