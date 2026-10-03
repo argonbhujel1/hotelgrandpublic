@@ -667,18 +667,26 @@ def menu_item():
 @admin_bp.route("/menu/item/bulk", methods=["POST"])
 @admin_required
 def menu_item_bulk():
-    """Add multiple items at once (name, price, prep time). No image on bulk."""
-    cat_id = int(request.form.get("category_id", 0) or 0)
+    """Add multiple items at once (name, price, prep time, category per row). No image on bulk."""
     names = request.form.getlist("names[]") or request.form.getlist("names")
     prices = request.form.getlist("prices[]") or request.form.getlist("prices")
     preps = request.form.getlist("prep_times[]") or request.form.getlist("prep_times")
-    if not cat_id:
-        flash("Select a category.", "error")
-        return redirect(url_for("admin.menu"))
+    cat_ids = request.form.getlist("category_ids[]") or request.form.getlist("category_ids")
+    # Fallback: single category for all rows (legacy)
+    fallback_cat = int(request.form.get("category_id", 0) or 0)
     added = 0
     for i, name in enumerate(names):
         name = (name or "").strip()
         if not name:
+            continue
+        try:
+            if i < len(cat_ids) and cat_ids[i]:
+                cat_id = int(cat_ids[i])
+            else:
+                cat_id = fallback_cat
+        except (TypeError, ValueError):
+            cat_id = fallback_cat
+        if not cat_id:
             continue
         try:
             price = float(prices[i]) if i < len(prices) and prices[i] not in (None, "") else 0
@@ -706,7 +714,7 @@ def menu_item_bulk():
         db.session.commit()
         flash(f"{added} menu item(s) added. Add photos from Edit if needed.", "success")
     else:
-        flash("No items to add (empty names).", "error")
+        flash("No items to add (empty names or missing category).", "error")
     return redirect(url_for("admin.menu"))
 
 

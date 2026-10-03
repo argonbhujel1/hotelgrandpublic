@@ -9,37 +9,37 @@
   <h2 style="font-size:1.1rem;margin-bottom:.75rem">Bulk add items</h2>
   <form method="post" action="{{ url_for('admin.menu_item_bulk') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <div class="form-group">
-      <label>Category (Item class) *</label>
-      <select name="category_id" required>
-        {% for c in categories %}
-        <option value="{{ c.id }}">{{ c.sort_order }}. {{ c.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="table-wrap" style="margin:.75rem 0">
-      <table class="data" id="bulkRows">
+    <div class="table-wrap" style="margin:.75rem 0;overflow-x:auto">
+      <table class="data" id="bulkRows" style="min-width:640px;width:100%">
         <thead>
           <tr>
-            <th>Item name *</th>
-            <th>Price (Rs.) *</th>
-            <th>Prep time (min)</th>
-            <th></th>
+            <th style="min-width:180px">Item name *</th>
+            <th style="width:110px">Price (Rs.) *</th>
+            <th style="width:120px">Prep time (min)</th>
+            <th style="min-width:180px">Category *</th>
+            <th style="width:70px"></th>
           </tr>
         </thead>
         <tbody>
           {% for _ in range(5) %}
           <tr class="bulk-row">
-            <td><input name="names[]" placeholder="Item name" style="width:100%"></td>
-            <td><input name="prices[]" type="number" step="1" min="0" placeholder="0" style="width:100px"></td>
-            <td><input name="prep_times[]" type="number" step="1" min="0" placeholder="e.g. 15" style="width:90px"></td>
+            <td><input name="names[]" placeholder="Item name" style="width:100%;padding:.45rem .55rem;border:1px solid #ddd;border-radius:8px"></td>
+            <td><input name="prices[]" type="number" step="1" min="0" placeholder="0" style="width:100%;padding:.45rem .55rem;border:1px solid #ddd;border-radius:8px"></td>
+            <td><input name="prep_times[]" type="number" step="1" min="0" placeholder="15" style="width:100%;padding:.45rem .55rem;border:1px solid #ddd;border-radius:8px"></td>
+            <td>
+              <select name="category_ids[]" required style="width:100%;padding:.45rem .55rem;border:1px solid #ddd;border-radius:8px">
+                {% for c in categories %}
+                <option value="{{ c.id }}">{{ c.sort_order }}. {{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </td>
             <td><button type="button" class="btn-link" onclick="this.closest('tr').remove()">Remove</button></td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem">
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.75rem;align-items:center">
       <button type="button" class="btn-link" onclick="addBulkRow()">+ Add row</button>
       <button type="submit" class="btn-primary">Save all items</button>
     </div>
@@ -124,13 +124,16 @@
 {% endfor %}
 
 <script>
+var CAT_OPTIONS = `{% for c in categories %}<option value="{{ c.id }}">{{ c.sort_order }}. {{ c.name }}</option>{% endfor %}`;
 function addBulkRow() {
   var tbody = document.querySelector('#bulkRows tbody');
   var tr = document.createElement('tr');
   tr.className = 'bulk-row';
-  tr.innerHTML = '<td><input name="names[]" placeholder="Item name" style="width:100%"></td>' +
-    '<td><input name="prices[]" type="number" step="1" min="0" placeholder="0" style="width:100px"></td>' +
-    '<td><input name="prep_times[]" type="number" step="1" min="0" placeholder="e.g. 15" style="width:90px"></td>' +
+  tr.innerHTML =
+    '<td><input name="names[]" placeholder="Item name" style="width:100%;padding:.45rem .55rem;border:1px solid #ddd;border-radius:8px"></td>' +
+    '<td><input name="prices[]" type="number" step="1" min="0" placeholder="0" style="width:100%;padding:.45rem .55rem;border:1px solid #ddd;border-radius:8px"></td>' +
+    '<td><input name="prep_times[]" type="number" step="1" min="0" placeholder="15" style="width:100%;padding:.45rem .55rem;border:1px solid #ddd;border-radius:8px"></td>' +
+    '<td><select name="category_ids[]" required style="width:100%;padding:.45rem .55rem;border:1px solid #ddd;border-radius:8px">' + CAT_OPTIONS + '</select></td>' +
     '<td><button type="button" class="btn-link" onclick="this.closest(\'tr\').remove()">Remove</button></td>';
   tbody.appendChild(tr);
 }
