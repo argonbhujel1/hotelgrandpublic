@@ -260,13 +260,18 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   var el = document.getElementById("home-map");
-  if (!el || typeof L === "undefined") return;
-  try {
-    var map = L.map(el, { zoomControl: false, attributionControl: false }).setView([26.6643, 87.6335], 14);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18 }).addTo(map);
-    L.marker([26.6643, 87.6335]).addTo(map);
-    setTimeout(function () { map.invalidateSize(); }, 300);
-  } catch (e) {}
+  if (!el) return;
+  el.innerHTML = "";
+  var iframe = document.createElement("iframe");
+  iframe.title = "Hotel Grand map";
+  iframe.width = "100%";
+  iframe.height = "100%";
+  iframe.style.border = "0";
+  iframe.style.borderRadius = "12px";
+  iframe.loading = "lazy";
+  iframe.referrerPolicy = "no-referrer-when-downgrade";
+  iframe.src = "https://www.google.com/maps?q=26.6643,87.6335&z=15&output=embed";
+  el.appendChild(iframe);
 });
 </script>
 {% endblock %}
